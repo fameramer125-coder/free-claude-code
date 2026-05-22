@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: authentication header and token validation."""
 
 from pathlib import Path
 

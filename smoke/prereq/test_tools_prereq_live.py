@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: tool-use stream shape and contract."""
 
 import pytest
 

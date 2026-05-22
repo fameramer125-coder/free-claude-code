@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: IDE-client (VS Code / JetBrains) request shapes."""
 
 import pytest
 

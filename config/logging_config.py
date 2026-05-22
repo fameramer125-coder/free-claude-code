@@ -36,10 +36,14 @@ def _redact_sensitive_substrings(message: str) -> str:
 
 
 def _serialize_with_context(record) -> str:
-    """Format record as JSON with context vars at top level.
-    Returns a format template; we inject _json into record for output.
+    """Loguru format callback: serialize record as a JSON line.
+
+    Loguru format callables must mutate ``record`` and return a template string
+    whose placeholders are resolved by loguru. We store the serialized JSON in
+    ``record["_json"]`` and return ``"{_json}\\n"`` so loguru writes exactly one
+    JSON line per record.
     """
-    extra = record.get("extra", {})
+    extra = record["extra"]
     out = {
         "time": str(record["time"]),
         "level": record["level"].name,
@@ -88,7 +92,6 @@ def configure_logging(
     global _configured
     if _configured and not force:
         return
-    _configured = True
 
     # Remove default loguru handler (writes to stderr)
     logger.remove()
@@ -123,3 +126,5 @@ def configure_logging(
         logging.getLogger(name).setLevel(
             logging.WARNING if not verbose_third_party else logging.NOTSET
         )
+
+    _configured = True

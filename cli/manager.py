@@ -20,6 +20,14 @@ class CLISessionManager:
 
     Each new conversation gets its own CLISession with its own subprocess.
     Replies to existing conversations reuse the same CLISession instance.
+
+    Sessions go through two ID stages:
+
+    1. **Pending** — created with a caller-supplied or auto-generated ``temp_id``
+       before the CLI process has emitted its real session UUID.
+    2. **Active** — promoted to ``_sessions`` via :meth:`register_real_session_id`
+       once the real UUID is known, with a bidirectional mapping kept between the
+       two IDs so that either can be used for lookup.
     """
 
     def __init__(
@@ -37,10 +45,14 @@ class CLISessionManager:
         Initialize the session manager.
 
         Args:
-            workspace_path: Working directory for CLI processes
-            api_url: API URL for the proxy
-            allowed_dirs: Directories the CLI is allowed to access
-            plans_directory: Directory for Claude Code CLI plan files (passed via --settings)
+            workspace_path: Working directory for CLI processes.
+            api_url: API URL for the proxy.
+            allowed_dirs: Directories the CLI is allowed to access.
+            plans_directory: Directory for Claude Code CLI plan files (passed via --settings).
+            claude_bin: Path or name of the ``claude`` binary to spawn.
+            log_raw_cli_diagnostics: Forward raw CLI stdout/stderr to the logger.
+            log_messaging_error_details: Include exception messages (not just type)
+                in session-stop error logs.
         """
         self.workspace = workspace_path
         self.api_url = api_url
@@ -61,11 +73,17 @@ class CLISessionManager:
     async def get_or_create_session(
         self, session_id: str | None = None
     ) -> tuple[CLISession, str, bool]:
-        """
-        Get an existing session or create a new one.
+        """Get an existing session or create a new one.
+
+        If ``session_id`` is provided it is resolved through ``_temp_to_real``
+        first, so callers can pass either a temp or real ID and hit the same
+        session.  When no match is found — or ``session_id`` is ``None`` — a
+        fresh :class:`CLISession` is created and placed in ``_pending_sessions``
+        under a temp ID (the supplied ``session_id``, or a generated one).
 
         Returns:
-            Tuple of (CLISession instance, session_id, is_new_session)
+            ``(session, effective_id, is_new)`` — ``is_new`` is ``True`` only
+            when a session was just created.
         """
         async with self._lock:
             if session_id:
@@ -94,7 +112,16 @@ class CLISessionManager:
     async def register_real_session_id(
         self, temp_id: str, real_session_id: str
     ) -> bool:
-        """Register the real session ID from CLI output."""
+        """Promote a pending session to active once the real CLI session UUID is known.
+
+        Moves the session from ``_pending_sessions`` to ``_sessions`` and records
+        the bidirectional ``temp_id`` ↔ ``real_session_id`` mapping so that
+        subsequent lookups with either ID reach the same session.
+
+        Returns ``False`` (without raising) if ``temp_id`` is not in
+        ``_pending_sessions``, which can happen if the session was removed
+        concurrently.
+        """
         async with self._lock:
             if temp_id not in self._pending_sessions:
                 logger.warning(f"Temp session {temp_id} not found")
@@ -109,7 +136,12 @@ class CLISessionManager:
             return True
 
     async def remove_session(self, session_id: str) -> bool:
-        """Remove a session from the manager."""
+        """Stop and remove a session, accepting either a temp or real ID.
+
+        Cleans up both directions of the ``temp_id`` ↔ ``real_session_id``
+        mapping when removing an active session.  Returns ``False`` if the ID
+        is not found in either ``_sessions`` or ``_pending_sessions``.
+        """
         async with self._lock:
             if session_id in self._pending_sessions:
                 session = self._pending_sessions.pop(session_id)
@@ -127,7 +159,12 @@ class CLISessionManager:
             return False
 
     async def stop_all(self):
-        """Stop all sessions."""
+        """Stop every active and pending session and reset all internal state.
+
+        Errors from individual :meth:`CLISession.stop` calls are caught and
+        logged rather than propagated, so one broken session cannot prevent
+        the others from being cleaned up.
+        """
         async with self._lock:
             all_sessions = list(self._sessions.values()) + list(
                 self._pending_sessions.values()

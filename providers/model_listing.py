@@ -1,7 +1,5 @@
 """Provider model-list response parsing helpers."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -83,6 +81,7 @@ def extract_openrouter_tool_model_infos(
         model_infos.add(
             ProviderModelInfo(
                 model_id=model_id,
+                # OpenRouter uses "reasoning" as the parameter name for thinking/CoT support.
                 supports_thinking="reasoning" in supported_parameter_names,
             )
         )

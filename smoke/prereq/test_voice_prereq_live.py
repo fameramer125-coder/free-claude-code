@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: voice transcription pipeline."""
 
 import math
 import os

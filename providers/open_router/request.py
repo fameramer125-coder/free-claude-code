@@ -1,7 +1,5 @@
 """Native Anthropic Messages request builder for OpenRouter."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from loguru import logger

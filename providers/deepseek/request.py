@@ -1,7 +1,5 @@
 """Request builder and DeepSeek native Anthropic compatibility sanitizer."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -100,6 +98,12 @@ def _has_tool_history_blocks(message: Mapping[str, Any]) -> bool:
 
 
 def _has_replayable_thinking_before_tool_use(message: Mapping[str, Any]) -> bool:
+    """True when the assistant message has non-empty thinking content before a tool_use block.
+
+    "Replayable" means DeepSeek can continue extended thinking across the tool turn:
+    the thinking content must be non-empty so it can be fed back as prior reasoning.
+    If thinking is present but empty, or follows the tool_use block, it is not replayable.
+    """
     if message.get("role") != "assistant":
         return False
     content = message.get("content")

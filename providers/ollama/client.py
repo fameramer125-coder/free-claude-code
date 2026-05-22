@@ -17,7 +17,9 @@ class OllamaProvider(AnthropicMessagesTransport):
             provider_name="OLLAMA",
             default_base_url=OLLAMA_DEFAULT_BASE,
         )
-        self._api_key = config.api_key or "ollama"
+        self._api_key = (
+            config.api_key or "ollama"
+        )  # Ollama needs no key; placeholder satisfies httpx
 
     async def _send_stream_request(self, body: dict) -> httpx.Response:
         """Create a streaming native Anthropic messages response."""

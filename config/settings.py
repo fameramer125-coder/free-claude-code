@@ -53,7 +53,11 @@ def _env_file_contains_key(path: Path, key: str) -> bool:
 
 
 def _env_file_value(path: Path, key: str) -> str | None:
-    """Return a dotenv value when the file explicitly defines the key."""
+    """Return the string value for key if the file defines it, otherwise None.
+
+    A bare ``KEY=`` entry (no value) returns ``""``; callers can distinguish
+    "defined with no value" from "not defined at all" via the None sentinel.
+    """
     if not path.is_file():
         return None
 
@@ -69,7 +73,11 @@ def _env_file_value(path: Path, key: str) -> str | None:
 
 
 def _env_file_override(model_config: Mapping[str, Any], key: str) -> str | None:
-    """Return the last configured dotenv value that explicitly defines a key."""
+    """Return the value from the last configured env file that explicitly defines key.
+
+    Later files in the list take precedence, matching the priority order in
+    :func:`_env_files` (user config < repo .env < FCC_ENV_FILE).
+    """
     configured_value: str | None = None
     for env_file in _configured_env_files(model_config):
         value = _env_file_value(env_file, key)
@@ -301,7 +309,6 @@ class Settings(BaseSettings):
             raise ValueError(message)
         return data
 
-    # Handle empty strings for optional string fields
     @field_validator(
         "telegram_bot_token",
         "allowed_telegram_user_id",
@@ -317,6 +324,7 @@ class Settings(BaseSettings):
     )
     @classmethod
     def parse_optional_str(cls, v: Any) -> Any:
+        # Dotenv files emit "" for unset optional vars instead of omitting them.
         if v == "":
             return None
         return v
@@ -324,6 +332,7 @@ class Settings(BaseSettings):
     @field_validator("max_message_log_entries_per_chat", mode="before")
     @classmethod
     def parse_optional_log_cap(cls, v: Any) -> Any:
+        # "" arrives from dotenv; None arrives when no env source sets the var.
         if v == "" or v is None:
             return None
         return v
@@ -402,6 +411,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def check_nvidia_nim_api_key(self) -> Settings:
+        """Require NVIDIA_NIM_API_KEY when the NIM transcription backend is active."""
         if (
             self.voice_note_enabled
             and self.whisper_device == "nvidia_nim"
@@ -429,12 +439,12 @@ class Settings(BaseSettings):
 
     @property
     def provider_type(self) -> str:
-        """Extract provider type from the default model string."""
+        """Provider id from the fallback MODEL string (e.g. ``'nvidia_nim'``)."""
         return Settings.parse_provider_type(self.model)
 
     @property
     def model_name(self) -> str:
-        """Extract the actual model name from the default model string."""
+        """Model id from the fallback MODEL string (everything after the first ``'/'``)."""
         return Settings.parse_model_name(self.model)
 
     def resolve_model(self, claude_model_name: str) -> str:

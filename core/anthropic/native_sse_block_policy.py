@@ -4,8 +4,6 @@ Used by :class:`OpenRouterProvider` and line-mode
 :class:`providers.anthropic_messages.AnthropicMessagesTransport` providers.
 """
 
-from __future__ import annotations
-
 import copy
 import json
 from dataclasses import dataclass, field
@@ -32,7 +30,14 @@ class _UpstreamBlockState:
 
 @dataclass
 class NativeSseBlockPolicyState:
-    """Track per-upstream content blocks and remapped Anthropic ``index`` field."""
+    """Track per-upstream content blocks and remapped Anthropic ``index`` field.
+
+    Upstream providers (e.g. OpenRouter) may emit overlapping or out-of-order
+    content blocks.  This state object maintains a bijection from upstream
+    indices to sequential downstream indices, a set of dropped blocks (when
+    thinking is disabled), and a pending-stop set to suppress duplicate
+    ``content_block_stop`` events emitted after a synthetic close.
+    """
 
     next_index: int = 0
     by_upstream: dict[int, _UpstreamBlockState] = field(default_factory=dict)

@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: messaging platform connectivity."""
 
 import os
 import time

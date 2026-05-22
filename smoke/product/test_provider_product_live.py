@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: per-provider stream and feature coverage."""
 
 import httpx
 import pytest

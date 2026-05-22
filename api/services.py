@@ -1,7 +1,5 @@
 """Application services for the Claude-compatible API."""
 
-from __future__ import annotations
-
 import traceback
 import uuid
 from collections.abc import AsyncIterator, Callable
@@ -28,6 +26,7 @@ from .web_tools.request import (
 )
 from .web_tools.streaming import stream_web_server_tool_response
 
+# Signature: (messages, system, tools) -> input_token_count
 TokenCounter = Callable[[list[Any], str | list[Any] | None, list[Any] | None], int]
 
 ProviderGetter = Callable[[str], BaseProvider]
@@ -99,7 +98,13 @@ class ClaudeProxyService:
         self._token_counter = token_counter
 
     def create_message(self, request_data: MessagesRequest) -> object:
-        """Create a message response or streaming response."""
+        """Route a message request and return an Anthropic SSE StreamingResponse.
+
+        Decision order: web-server-tool shortcut → local optimizations → provider stream.
+        ``ProviderError`` is re-raised directly so the app-level handler in
+        ``app.py`` formats it; all other exceptions are wrapped as HTTP 500 to
+        keep a stable error shape for clients regardless of the failure source.
+        """
         try:
             _require_non_empty_messages(request_data.messages)
 

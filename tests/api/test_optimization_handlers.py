@@ -167,7 +167,7 @@ class TestTryFilepathMock:
         with (
             patch(
                 "api.optimization_handlers.is_filepath_extraction_request",
-                return_value=(True, "ls", "a.txt b.txt"),
+                return_value=(True, "ls"),
             ),
             patch(
                 "api.optimization_handlers.extract_filepaths_from_command",
@@ -187,7 +187,7 @@ class TestTryFilepathMock:
         with (
             patch(
                 "api.optimization_handlers.is_filepath_extraction_request",
-                return_value=(True, "ls", "out"),
+                return_value=(True, "ls"),
             ),
             patch(
                 "api.optimization_handlers.extract_filepaths_from_command",

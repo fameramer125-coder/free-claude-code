@@ -1,7 +1,5 @@
 """Platform rendering profiles for messaging transcripts and status text."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -37,7 +35,11 @@ class RenderingProfile:
 
 
 def build_rendering_profile(platform_name: str) -> RenderingProfile:
-    """Return rendering rules for a messaging platform."""
+    """Return rendering rules for a messaging platform.
+
+    Discord uses its own Markdown dialect (no ``MarkdownV2`` escaping, shorter
+    2000-char limit); everything else falls back to Telegram ``MarkdownV2``.
+    """
     is_discord = platform_name == "discord"
     return RenderingProfile(
         format_status=format_status_discord if is_discord else format_status_telegram,

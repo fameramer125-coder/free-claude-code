@@ -47,8 +47,8 @@ class TestFilepathExtractionDetection:
             "Command: cat foo.txt\nOutput: hi\n\nPlease extract <filepaths>.",
         )
         req = _mk_req([msg], tools=[{"name": "search"}])
-        ok, cmd, out = is_filepath_extraction_request(req)
-        assert (ok, cmd, out) == (False, "", "")
+        ok, cmd = is_filepath_extraction_request(req)
+        assert (ok, cmd) == (False, "")
 
     def test_rejects_when_missing_output_marker(self):
         msg = _mk_msg(
@@ -56,14 +56,14 @@ class TestFilepathExtractionDetection:
             "Command: cat foo.txt\n(no output marker)\n<filepaths>",
         )
         req = _mk_req([msg], tools=None)
-        ok, cmd, out = is_filepath_extraction_request(req)
-        assert (ok, cmd, out) == (False, "", "")
+        ok, cmd = is_filepath_extraction_request(req)
+        assert (ok, cmd) == (False, "")
 
     def test_rejects_when_not_asking_for_filepaths(self):
         msg = _mk_msg("user", "Command: cat foo.txt\nOutput: hi")
         req = _mk_req([msg], tools=None)
-        ok, cmd, out = is_filepath_extraction_request(req)
-        assert (ok, cmd, out) == (False, "", "")
+        ok, cmd = is_filepath_extraction_request(req)
+        assert (ok, cmd) == (False, "")
 
     def test_detects_filepath_extraction_via_system_block(self):
         """Command: + Output: in user, no filepaths in user; system has extract instructions."""
@@ -73,13 +73,11 @@ class TestFilepathExtractionDetection:
             tools=None,
             system="Extract any file paths that this command reads or modifies.",
         )
-        ok, cmd, out = is_filepath_extraction_request(req)
+        ok, cmd = is_filepath_extraction_request(req)
         assert ok is True
         assert cmd == "ls"
-        assert "avazu-ctr" in out
-        assert "free-claude-code" in out
 
-    def test_extracts_command_and_output_and_cleans_output(self):
+    def test_extracts_command(self):
         msg = _mk_msg(
             "user",
             "Command: cat foo.txt\n"
@@ -88,10 +86,9 @@ class TestFilepathExtractionDetection:
             "<next_section>ignore me</next_section>",
         )
         req = _mk_req([msg], tools=None)
-        ok, cmd, out = is_filepath_extraction_request(req)
+        ok, cmd = is_filepath_extraction_request(req)
         assert ok is True
         assert cmd == "cat foo.txt"
-        assert out == "line1\nline2"
 
 
 class TestExtractFilepathsFromCommand:
@@ -123,7 +120,7 @@ class TestExtractFilepathsFromCommand:
         ],
     )
     def test_extracts_expected_paths(self, command, expected_paths):
-        result = extract_filepaths_from_command(command, output="(ignored)")
+        result = extract_filepaths_from_command(command)
         for p in expected_paths:
             assert p in result
         if not expected_paths:

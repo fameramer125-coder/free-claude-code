@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: authentication variants in a real server."""
 
 import httpx
 import pytest

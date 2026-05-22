@@ -1,9 +1,5 @@
 """Compatibility re-exports for :mod:`api.web_tools` (web_search / web_fetch)."""
 
-from __future__ import annotations
-
-import httpx
-
 from api.web_tools.egress import (
     WebFetchEgressPolicy,
     WebFetchEgressViolation,
@@ -16,7 +12,6 @@ __all__ = [
     "WebFetchEgressPolicy",
     "WebFetchEgressViolation",
     "enforce_web_fetch_egress",
-    "httpx",
     "is_web_server_tool_request",
     "stream_web_server_tool_response",
 ]

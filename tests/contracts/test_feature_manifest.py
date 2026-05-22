@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Contract tests: feature manifest correctness and README/platform consistency."""
 
 import re
 from pathlib import Path

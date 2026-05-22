@@ -151,6 +151,12 @@ def _sanitize_nim_tool_schemas(body: dict[str, Any]) -> None:
 def _set_extra(
     extra_body: dict[str, Any], key: str, value: Any, ignore_value: Any = None
 ) -> None:
+    """Set ``key`` in ``extra_body`` unless it is already present, None, or equals ``ignore_value``.
+
+    ``ignore_value`` prevents setting NIM defaults that are already at their no-op value
+    (e.g. ``top_k=-1`` means disabled, ``min_p=0.0`` means off) — sending them
+    would be redundant noise in the request body.
+    """
     if key in extra_body:
         return
     if value is None:

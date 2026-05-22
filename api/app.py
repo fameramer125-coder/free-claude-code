@@ -22,7 +22,11 @@ from .validation_log import summarize_request_validation_body
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager."""
+    """Application lifespan manager used when ``lifespan_enabled=True`` (tests/dev).
+
+    Production ASGI uses :class:`GracefulLifespanApp` instead, which implements
+    the lifespan protocol directly for cleaner startup-failure reporting.
+    """
     runtime = AppRuntime.for_app(app, settings=get_settings())
     await runtime.startup()
 
@@ -47,6 +51,11 @@ class GracefulLifespanApp:
         await self._lifespan(receive, send)
 
     async def _lifespan(self, receive: Receive, send: Send) -> None:
+        """Drive the ASGI lifespan protocol, catching startup failures cleanly.
+
+        ``startup_complete`` guards against calling ``runtime.shutdown()`` when
+        startup raised — the runtime may be only partially initialised in that case.
+        """
         settings = get_settings()
         runtime = AppRuntime.for_app(self.app, settings=settings)
         startup_complete = False
@@ -94,10 +103,8 @@ def create_app(*, lifespan_enabled: bool = True) -> FastAPI:
         app_kwargs["lifespan"] = lifespan
     app = FastAPI(**app_kwargs)
 
-    # Register routes
     app.include_router(router)
 
-    # Exception handlers
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(request: Request, exc: RequestValidationError):
         """Log request shape for 422 debugging without content values."""
@@ -123,8 +130,7 @@ def create_app(*, lifespan_enabled: bool = True) -> FastAPI:
     @app.exception_handler(ProviderError)
     async def provider_error_handler(request: Request, exc: ProviderError):
         """Handle provider-specific errors and return Anthropic format."""
-        err_settings = get_settings()
-        if err_settings.log_api_error_tracebacks:
+        if settings.log_api_error_tracebacks:
             logger.error(
                 "Provider Error: error_type={} status_code={} message={}",
                 exc.error_type,
@@ -145,7 +151,6 @@ def create_app(*, lifespan_enabled: bool = True) -> FastAPI:
     @app.exception_handler(Exception)
     async def general_error_handler(request: Request, exc: Exception):
         """Handle general errors and return Anthropic format."""
-        settings = get_settings()
         if settings.log_api_error_tracebacks:
             logger.error("General Error: {}", exc)
             logger.error(traceback.format_exc())
@@ -171,5 +176,10 @@ def create_app(*, lifespan_enabled: bool = True) -> FastAPI:
 
 
 def create_asgi_app() -> GracefulLifespanApp:
-    """Create the server ASGI app with graceful lifespan failure reporting."""
+    """Create the production ASGI app with graceful lifespan failure reporting.
+
+    ``lifespan_enabled=False`` prevents FastAPI from running its own lifespan
+    context manager — :class:`GracefulLifespanApp` drives the ASGI lifespan
+    protocol directly, so enabling both would execute startup/shutdown twice.
+    """
     return GracefulLifespanApp(create_app(lifespan_enabled=False))

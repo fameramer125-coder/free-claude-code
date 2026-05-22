@@ -7,7 +7,7 @@
 - Install astral uv using "curl -LsSf https://astral.sh/uv/install.sh | sh" if not already installed and if already installed then update it to the latest version
 - Install Python 3.14 using `uv python install 3.14` if not already installed
 - Always use `uv run` to run files instead of the global `python` command.
-- Current uv ruff formatter is set to py314 which has supports multiple exception types without paranthesis (except TypeError, ValueError:)
+- Current uv ruff formatter is set to py314 which supports multiple exception types without parentheses (e.g. `except TypeError, ValueError:`)
 - Read `.env.example` for environment variables.
 - All CI checks must pass; failing checks block merge.
 - Add tests for new changes (including edge cases), then run `uv run pytest`.

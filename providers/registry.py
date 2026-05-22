@@ -1,7 +1,5 @@
 """Provider descriptors, factory, and runtime registry."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable, MutableMapping
@@ -193,7 +191,16 @@ def _referenced_provider_ids(settings: Settings) -> frozenset[str]:
 
 
 def _model_list_provider_ids_for_settings(settings: Settings) -> tuple[str, ...]:
-    """Return providers worth discovering for this process configuration."""
+    """Return provider ids that are worth querying for model discovery.
+
+    Two paths:
+
+    - **Static-credential providers** (e.g. Ollama, LM Studio): only included when
+      they are explicitly referenced in configured model refs, to avoid pointless
+      queries to providers the user hasn't configured.
+    - **Credential-env providers** (e.g. OpenRouter, NIM): included when a non-empty
+      credential is present in settings, regardless of configured model refs.
+    """
     referenced_provider_ids = _referenced_provider_ids(settings)
     provider_ids: list[str] = []
     for provider_id, descriptor in PROVIDER_DESCRIPTORS.items():

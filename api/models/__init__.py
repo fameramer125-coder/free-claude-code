@@ -1,4 +1,4 @@
-"""API models exports."""
+"""Request/response Pydantic models for the Anthropic-compatible API."""
 
 from .anthropic import (
     ContentBlockImage,

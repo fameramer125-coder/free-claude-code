@@ -1,7 +1,5 @@
 """Package import contract tests (static AST; dynamic ``importlib`` loads are not scanned)."""
 
-from __future__ import annotations
-
 import ast
 from pathlib import Path
 

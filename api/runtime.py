@@ -1,7 +1,5 @@
 """Application runtime composition and lifecycle ownership."""
 
-from __future__ import annotations
-
 import asyncio
 import os
 from dataclasses import dataclass, field
@@ -99,6 +97,13 @@ class AppRuntime:
         return cls(app=app, settings=settings or get_settings())
 
     async def startup(self) -> None:
+        """Start all runtime resources and wire them to ``app.state``.
+
+        The provider registry is assigned to ``app.state`` before validation so
+        that the cleanup path in the exception handler has a concrete reference.
+        Messaging startup failure is logged but does not abort the proxy — the
+        API proxy remains operational without messaging infrastructure.
+        """
         logger.info("Starting Claude Code Proxy...")
         self._provider_registry = ProviderRegistry()
         self.app.state.provider_registry = self._provider_registry
@@ -154,6 +159,13 @@ class AppRuntime:
         logger.info("Server shut down cleanly")
 
     async def _start_messaging_if_configured(self) -> None:
+        """Start the messaging platform when one is configured.
+
+        Both ``ImportError`` (messaging extras not installed) and general
+        exceptions are caught and logged rather than re-raised — messaging is
+        optional infrastructure and its failure must not prevent the API proxy
+        from starting.
+        """
         try:
             from messaging.platforms.factory import (
                 MessagingPlatformOptions,
@@ -253,7 +265,7 @@ class AppRuntime:
 
         platform.on_message(self.message_handler.handle_message)
         await platform.start()
-        logger.info(f"{platform.name} platform started with message handler")
+        logger.info("{} platform started with message handler", platform.name)
 
     def _restore_tree_state(self, session_store: SessionStore) -> None:
         saved_trees = session_store.get_all_trees()
@@ -262,7 +274,7 @@ class AppRuntime:
         if self.message_handler is None:
             return
 
-        logger.info(f"Restoring {len(saved_trees)} conversation trees...")
+        logger.info("Restoring {} conversation trees...", len(saved_trees))
         from messaging.trees.queue_manager import TreeQueueManager
 
         self.message_handler.replace_tree_queue(
@@ -287,6 +299,12 @@ class AppRuntime:
         self.app.state.cli_manager = self.cli_manager
 
     async def _shutdown_limiter(self) -> None:
+        """Shut down the singleton rate limiter if the messaging module is present.
+
+        Import is deferred to match startup: if messaging extras were never
+        loaded (``ImportError`` during startup), this import will also fail and
+        the debug log is the correct outcome — there is nothing to shut down.
+        """
         verbose = self.settings.log_api_error_tracebacks
         try:
             from messaging.limiter import MessagingRateLimiter

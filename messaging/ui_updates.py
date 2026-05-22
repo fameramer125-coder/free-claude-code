@@ -1,7 +1,5 @@
 """Throttled platform UI updates driven by transcript rendering."""
 
-from __future__ import annotations
-
 import time
 from collections.abc import Callable
 
@@ -13,7 +11,12 @@ from .transcript import RenderCtx, TranscriptBuffer
 
 
 class ThrottledTranscriptEditor:
-    """Rate-limited status message edits from a growing transcript."""
+    """Rate-limited in-place edits of a platform status message driven by transcript growth.
+
+    Calls to :meth:`update` are throttled to at most once per second unless
+    ``force=True`` is set.  The ``_last_displayed_text`` guard prevents
+    redundant API calls when the rendered output hasn't changed.
+    """
 
     def __init__(
         self,

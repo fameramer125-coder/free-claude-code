@@ -1,7 +1,5 @@
 """Gateway-safe model id encoding for Claude Code model discovery."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 GATEWAY_MODEL_ID_PREFIX = "anthropic"
@@ -14,6 +12,13 @@ NO_THINKING_GATEWAY_MODEL_ID_PREFIX = "claude-3-freecc-no-thinking"
 
 @dataclass(frozen=True, slots=True)
 class DecodedGatewayModelId:
+    """Result of decoding a gateway model ID back to its provider/model pair.
+
+    ``force_thinking_enabled`` is ``None`` when the ID carries no thinking
+    preference (the caller should fall back to settings), or ``False`` when the
+    no-thinking prefix was used to force it off.
+    """
+
     provider_id: str
     provider_model: str
     force_thinking_enabled: bool | None = None
@@ -30,7 +35,12 @@ def no_thinking_gateway_model_id(provider_model_ref: str) -> str:
 
 
 def decode_gateway_model_id(model_name: str) -> DecodedGatewayModelId | None:
-    """Decode a model id advertised by this gateway, if it is one."""
+    """Decode a gateway model ID back to its provider/model pair.
+
+    Returns ``None`` for any name not produced by :func:`gateway_model_id` or
+    :func:`no_thinking_gateway_model_id`.  Expected structure:
+    ``<gateway-prefix>/<provider_id>/<model_name>``.
+    """
     prefix, separator, remainder = model_name.partition("/")
     if not separator:
         return None

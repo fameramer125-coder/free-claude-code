@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: end-to-end API completions and error handling."""
 
 from typing import Any
 

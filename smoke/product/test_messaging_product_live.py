@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: messaging handler tree and session lifecycle."""
 
 import json
 

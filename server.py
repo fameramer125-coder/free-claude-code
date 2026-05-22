@@ -1,8 +1,14 @@
 """
 Claude Code Proxy - Entry Point
 
-Minimal entry point that builds the ASGI app via :func:`api.app.create_app`.
-Run with: uv run uvicorn server:app --host 0.0.0.0 --port 8082 --timeout-graceful-shutdown 5
+Builds the ASGI app at import time so uvicorn can load it as ``server:app``:
+
+    uv run uvicorn server:app --host 0.0.0.0 --port 8082 --timeout-graceful-shutdown 5
+
+When run as ``__main__``, host and port come from :class:`config.settings.Settings`.
+
+``create_app`` is re-exported so callers can do ``from server import create_app``
+without reaching into ``api.app`` directly.
 """
 
 from api.app import create_app, create_asgi_app

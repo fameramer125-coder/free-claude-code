@@ -1,7 +1,5 @@
 """Shared transport for providers with native Anthropic Messages endpoints."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Iterator
 from typing import Any, Literal
 
@@ -356,7 +354,12 @@ class AnthropicMessagesTransport(BaseProvider):
             try:
 
                 async def _validated_stream_send() -> httpx.Response:
-                    """Send request; raise inside retry loop on 429 so rate limiter can backoff."""
+                    """Send request; raise inside retry loop on 429 so rate limiter can backoff.
+
+                    The explicit ``raise_for_status()`` on 429 converts the response into
+                    an ``httpx.HTTPStatusError`` that ``execute_with_retry`` catches and
+                    uses to trigger exponential backoff before the next attempt.
+                    """
                     send_response = await self._send_stream_request(body)
                     if send_response.status_code == 429:
                         await send_response.aclose()

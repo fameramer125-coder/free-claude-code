@@ -72,7 +72,7 @@ class OverloadedError(ProviderError):
     def __init__(self, message: str, raw_error: Any = None):
         super().__init__(
             message,
-            status_code=529,
+            status_code=529,  # Anthropic's non-standard "overloaded" code (not in RFC 7231)
             error_type="overloaded_error",
             raw_error=raw_error,
         )

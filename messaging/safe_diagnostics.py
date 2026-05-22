@@ -1,7 +1,5 @@
 """Helpers for redacting user-derived content from log lines."""
 
-from __future__ import annotations
-
 
 def format_exception_for_log(exc: BaseException, *, log_full_message: bool) -> str:
     """Return exception type and optionally ``str(exc)`` for operator diagnostics."""
@@ -11,7 +9,7 @@ def format_exception_for_log(exc: BaseException, *, log_full_message: bool) -> s
 
 
 def text_len_hint(text: str | None) -> int:
-    """Length of text for metadata-only logging (0 when missing)."""
+    """Character count for metadata-only logging (0 when ``text`` is falsy)."""
     if not text:
         return 0
     return len(text)

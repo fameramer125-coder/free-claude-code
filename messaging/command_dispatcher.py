@@ -1,7 +1,5 @@
 """Command parsing and dispatch for messaging handlers."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from .commands import handle_clear_command, handle_stats_command, handle_stop_command
@@ -9,7 +7,11 @@ from .models import IncomingMessage
 
 
 def parse_command_base(text: str | None) -> str:
-    """Return the slash command without bot mention suffix."""
+    """Return the slash command without a trailing bot-mention suffix.
+
+    E.g. ``"/stop@mybot"`` → ``"/stop"``, ``"/clear"`` → ``"/clear"``,
+    ``""`` → ``""``.
+    """
     parts = (text or "").strip().split()
     cmd = parts[0] if parts else ""
     return cmd.split("@", 1)[0] if cmd else ""

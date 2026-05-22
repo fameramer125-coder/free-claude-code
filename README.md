@@ -507,7 +507,8 @@ free-claude-code/
 ├── messaging/             # Discord/Telegram adapters, sessions, voice
 ├── cli/                   # Package entry points and Claude process management
 ├── config/                # Settings, provider catalog, logging
-└── tests/                 # Unit and contract tests
+├── tests/                 # Unit and contract tests
+└── smoke/                 # Opt-in live product smoke tests (FCC_LIVE_SMOKE=1)
 ```
 
 ### Commands

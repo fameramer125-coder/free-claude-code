@@ -1,7 +1,5 @@
 """Detect forced Anthropic web server tool requests."""
 
-from __future__ import annotations
-
 from api.models.anthropic import MessagesRequest, Tool
 
 
@@ -57,6 +55,8 @@ def is_anthropic_server_tool_definition(tool: Tool) -> bool:
         return True
     typ = tool.type
     if isinstance(typ, str):
+        # Anthropic appends date suffixes to tool type strings (e.g. "web_search_20250305"),
+        # so startswith catches all version variants.
         return typ.startswith("web_search") or typ.startswith("web_fetch")
     return False
 

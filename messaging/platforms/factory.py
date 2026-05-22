@@ -6,8 +6,6 @@ To add a new platform (e.g. Discord, Slack):
 2. Add a case to create_messaging_platform() below
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from loguru import logger

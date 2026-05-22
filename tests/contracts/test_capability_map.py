@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Contract tests: capability map completeness and feature-to-smoke wiring."""
 
 from smoke.capabilities import (
     CAPABILITY_CONTRACTS,

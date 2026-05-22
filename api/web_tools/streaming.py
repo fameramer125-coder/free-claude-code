@@ -1,7 +1,5 @@
 """SSE streaming for local web_search / web_fetch server tool results."""
 
-from __future__ import annotations
-
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
@@ -153,7 +151,9 @@ async def stream_web_server_tool_response(
             tool_name, error, verbose=verbose_client_errors
         )
 
-    output_tokens = max(1, len(summary) // 4)
+    output_tokens = max(
+        1, len(summary) // 4
+    )  # ~4 chars/token heuristic; min 1 to avoid zero
 
     yield format_sse_event(
         "content_block_start",

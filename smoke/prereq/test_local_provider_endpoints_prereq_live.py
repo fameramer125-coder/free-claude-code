@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: local provider endpoint reachability (LM Studio, etc.)."""
 
 import httpx
 import pytest

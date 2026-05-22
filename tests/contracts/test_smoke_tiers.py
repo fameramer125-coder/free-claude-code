@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Contract tests: smoke report summary formatting and tier structure."""
 
 import json
 from pathlib import Path

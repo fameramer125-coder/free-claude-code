@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: API request/response shapes and streaming."""
 
 from typing import Any
 

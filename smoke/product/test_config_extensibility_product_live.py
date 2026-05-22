@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: settings extensibility and platform config overrides."""
 
 import os
 import subprocess

@@ -58,6 +58,12 @@ def resolve_provider(
 def _resolve_with_registry(
     registry: ProviderRegistry, provider_type: str, settings: Settings
 ) -> BaseProvider:
+    """Resolve a provider through a concrete registry, with error mapping.
+
+    Maps :class:`~providers.exceptions.AuthenticationError` to HTTP 503 — not
+    401 — because a missing upstream API key is a server configuration failure,
+    not a client authentication failure. Logs first-time provider initialisation.
+    """
     should_log_init = not registry.is_cached(provider_type)
     try:
         provider = registry.get(provider_type, settings)
@@ -93,8 +99,9 @@ def require_api_key(
 ) -> None:
     """Require a server API key (Anthropic-style).
 
-    Checks `x-api-key` header or `Authorization: Bearer ...` against
-    `Settings.anthropic_auth_token`. If `ANTHROPIC_AUTH_TOKEN` is empty, this is a no-op.
+    Checks ``x-api-key``, ``authorization`` (Bearer), and ``anthropic-auth-token``
+    headers against ``Settings.anthropic_auth_token``. If ``ANTHROPIC_AUTH_TOKEN``
+    is empty, this is a no-op and all requests are allowed through.
     """
     anthropic_auth_token = settings.anthropic_auth_token
     if not anthropic_auth_token:
@@ -137,7 +144,12 @@ def get_provider() -> BaseProvider:
 
 
 async def cleanup_provider():
-    """Cleanup all provider resources."""
+    """Release all process-level provider resources (shutdown and test teardown).
+
+    Passes the module-level ``_providers`` dict to a temporary registry so
+    ``ProviderRegistry.cleanup()`` drains and clears it in-place, then rebinds
+    ``_providers`` to a fresh empty dict so the name is safe to reuse.
+    """
     global _providers
     await ProviderRegistry(_providers).cleanup()
     _providers = {}

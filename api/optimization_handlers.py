@@ -29,6 +29,11 @@ def _text_response(
     input_tokens: int,
     output_tokens: int,
 ) -> MessagesResponse:
+    """Build a non-streaming text response for optimization fast-paths.
+
+    ``input_tokens`` and ``output_tokens`` are caller-supplied estimates —
+    no upstream API call is made, so real token counts are unavailable.
+    """
     return MessagesResponse(
         id=f"msg_{uuid.uuid4()}",
         model=request_data.model,
@@ -119,11 +124,11 @@ def try_filepath_mock(
     if not settings.enable_filepath_extraction_mock:
         return None
 
-    is_fp, cmd, output = is_filepath_extraction_request(request_data)
+    is_fp, cmd = is_filepath_extraction_request(request_data)
     if not is_fp:
         return None
 
-    filepaths = extract_filepaths_from_command(cmd, output)
+    filepaths = extract_filepaths_from_command(cmd)
     logger.info("Optimization: Mocked filepath extraction")
     return _text_response(
         request_data,

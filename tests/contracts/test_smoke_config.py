@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Contract tests: smoke config loading and server/child-process option shapes."""
 
 from pathlib import Path
 from types import SimpleNamespace

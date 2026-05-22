@@ -39,6 +39,8 @@ def _iter_heuristic_tool_use_sse(
     if tool_use.get("name") == "Task" and isinstance(tool_use.get("input"), dict):
         task_input = tool_use["input"]
         if task_input.get("run_in_background") is not False:
+            # Background tasks cannot be tracked through this proxy — force foreground
+            # so Claude Code waits for the result instead of losing it silently.
             task_input["run_in_background"] = False
     yield from sse.close_content_blocks()
     block_idx = sse.blocks.allocate_index()
@@ -358,8 +360,9 @@ class OpenAIChatTransport(BaseProvider):
                 for event in sse.close_all_blocks():
                     yield event
                 if sse.blocks.has_emitted_tool_block():
-                    # Avoid a second assistant text block after an emitted tool_use, which
-                    # breaks OpenAI history replay (issue #206) when Claude Code stores it.
+                    # Avoid a second assistant text block after an emitted tool_use —
+                    # Claude Code stores assistant messages verbatim for history replay,
+                    # and a trailing text block after tool_use produces an invalid turn.
                     yield sse.emit_top_level_error(error_message)
                 else:
                     for event in sse.emit_error(error_message):

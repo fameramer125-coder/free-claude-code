@@ -23,20 +23,19 @@ def _strip_env_assignments(parts: list[str]) -> list[str]:
 
 
 def extract_command_prefix(command: str) -> str:
-    """Extract the command prefix for fast prefix detection.
+    """Extract the leading command name (or two-word subcommand) from a shell string.
 
-    Parses a shell command safely, handling environment variables and
-    command injection attempts. Returns the command prefix suitable
-    for quick identification.
-
-    Returns:
-        Command prefix (e.g., "git", "git commit", "npm install")
-        or "none" if no valid command found
+    Returns ``"command_injection_detected"`` for backtick or ``$(...)`` patterns.
+    Returns ``"none"`` when the string is empty or consists only of env assignments.
+    For commands in the two-word set (``git``, ``npm``, etc.) the subcommand is
+    appended when present (e.g. ``"git commit"``).
+    Falls back to plain ``str.split()`` when ``shlex.split`` raises on unmatched quotes.
     """
     if "`" in command or "$(" in command:
         return "command_injection_detected"
 
     try:
+        # shlex.split raises ValueError on unmatched quotes; fallback handles that below.
         parts = shlex.split(command, posix=False)
         if not parts:
             return "none"
@@ -84,15 +83,14 @@ def extract_command_prefix(command: str) -> str:
         return cmd_parts[0] if cmd_parts else "none"
 
 
-def extract_filepaths_from_command(command: str, output: str) -> str:
-    """Extract file paths from a command locally without API call.
+def extract_filepaths_from_command(command: str) -> str:
+    """Return file paths read by ``command`` as ``<filepaths>…</filepaths>`` XML.
 
-    Determines if the command reads file contents and extracts paths accordingly.
-    Commands like ls/dir/find just list files, so return empty.
-    Commands like cat/head/tail actually read contents, so extract the file path.
-
-    Returns:
-        Filepath extraction result in <filepaths> format
+    Listing commands (``ls``, ``find``, etc.) return an empty tag — they name files
+    without reading them.  Reading commands (``cat``, ``head``, etc.) return the
+    non-flag positional args.  ``grep`` is handled specially: the first positional
+    arg is the pattern (skipped unless ``-e``/``-f`` was used), the rest are paths.
+    All other commands return an empty tag.
     """
     listing_commands = {
         "ls",

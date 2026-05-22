@@ -47,7 +47,9 @@ class ContentBlockToolResult(_AnthropicBlockBase):
 class ContentBlockThinking(_AnthropicBlockBase):
     type: Literal["thinking"]
     thinking: str
-    signature: str | None = None
+    signature: str | None = (
+        None  # Anthropic cryptographic integrity signature; absent on some providers
+    )
 
 
 class ContentBlockRedactedThinking(_AnthropicBlockBase):
@@ -100,7 +102,9 @@ class Message(BaseModel):
             | ContentBlockWebFetchToolResult
         ]
     )
-    reasoning_content: str | None = None
+    reasoning_content: str | None = (
+        None  # DeepSeek-style thinking field; not part of the Anthropic spec
+    )
 
 
 class Tool(_AnthropicBlockBase):
@@ -113,6 +117,12 @@ class Tool(_AnthropicBlockBase):
 
 
 class ThinkingConfig(BaseModel):
+    """Extended thinking configuration.
+
+    Accepts both the ``enabled`` boolean form (older SDKs) and the ``type``
+    string form used by the current API (``{"type": "enabled", "budget_tokens": N}``).
+    """
+
     enabled: bool | None = True
     type: str | None = None
     budget_tokens: int | None = None
@@ -132,7 +142,9 @@ class MessagesRequest(BaseModel):
     messages: list[Message]
     system: str | list[SystemContent] | None = None
     stop_sequences: list[str] | None = None
-    stream: bool | None = True
+    stream: bool | None = (
+        True  # Proxy always streams; True here overrides the Anthropic API default of False
+    )
     temperature: float | None = None
     top_p: float | None = None
     top_k: int | None = None

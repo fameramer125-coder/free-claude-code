@@ -154,21 +154,18 @@ class ClaudeMessageHandler:
         if await dispatch_command(self, incoming, cmd_base):
             return
 
-        # Filter out status messages (our own messages)
         text = incoming.text or ""
         if any(text.startswith(p) for p in STATUS_MESSAGE_PREFIXES):
             return
 
-        # Check if this is a reply to an existing node in a tree
         parent_node_id = None
         tree = None
 
         if incoming.is_reply() and incoming.reply_to_message_id:
-            # Look up if the replied-to message is in any tree (could be a node or status message)
             reply_id = incoming.reply_to_message_id
             tree = self.tree_queue.get_tree_for_node(reply_id)
             if tree:
-                # Resolve to actual node ID (handles status message replies)
+                # resolve_parent_node_id handles replies to status messages (not just node messages)
                 parent_node_id = self.tree_queue.resolve_parent_node_id(reply_id)
                 if parent_node_id:
                     logger.info(f"Found tree for reply, parent node: {parent_node_id}")
@@ -176,12 +173,10 @@ class ClaudeMessageHandler:
                     logger.warning(
                         f"Reply to {incoming.reply_to_message_id} found tree but no valid parent node"
                     )
-                    tree = None  # Treat as new conversation
+                    tree = None  # treat as new conversation
 
-        # Generate node ID
         node_id = incoming.message_id
 
-        # Use pre-sent status (e.g. voice note) or send new
         status_text = self._get_initial_status(tree, parent_node_id)
         if incoming.status_message_id:
             status_msg_id = incoming.status_message_id
@@ -204,36 +199,30 @@ class ClaudeMessageHandler:
             incoming.platform, incoming.chat_id, status_msg_id, "status"
         )
 
-        # Create or extend tree
         if parent_node_id and tree and status_msg_id:
-            # Reply to existing node - add as child
             tree, _node = await self.tree_queue.add_to_tree(
                 parent_node_id=parent_node_id,
                 node_id=node_id,
                 incoming=incoming,
                 status_message_id=status_msg_id,
             )
-            # Register status message as a node too for reply chains
+            # Register the status message so that replying to it also resolves to this node.
             self.tree_queue.register_node(status_msg_id, tree.root_id)
             self.session_store.register_node(status_msg_id, tree.root_id)
             self.session_store.register_node(node_id, tree.root_id)
         elif status_msg_id:
-            # New conversation - create new tree
             tree = await self.tree_queue.create_tree(
                 node_id=node_id,
                 incoming=incoming,
                 status_message_id=status_msg_id,
             )
-            # Register status message
             self.tree_queue.register_node(status_msg_id, tree.root_id)
             self.session_store.register_node(node_id, tree.root_id)
             self.session_store.register_node(status_msg_id, tree.root_id)
 
-        # Persist tree
         if tree:
             self.session_store.save_tree(tree.root_id, tree.to_dict())
 
-        # Enqueue for processing
         was_queued = await self.tree_queue.enqueue(
             node_id=node_id,
             processor=self._process_node,
@@ -481,9 +470,8 @@ class ClaudeMessageHandler:
                 )
         finally:
             logger.info(f"HANDLER: _process_node completed for node {node_id}")
-            # Free the session-manager slot. Session IDs are persisted in the tree and
-            # can be resumed later by ID; we don't need to keep a CLISession instance
-            # around after this node completes.
+            # Session IDs are persisted in the tree and can be resumed later by ID;
+            # the CLISession subprocess slot can be freed immediately on completion.
             try:
                 if captured_session_id:
                     await self.cli_manager.remove_session(captured_session_id)
@@ -538,24 +526,22 @@ class ClaudeMessageHandler:
         return self.format_status("⏳", "Launching new Claude CLI instance...")
 
     async def stop_all_tasks(self) -> int:
-        """
-        Stop all pending and in-progress tasks.
+        """Stop all pending and in-progress tasks.
 
-        Order of operations:
-        1. Cancel tree queue tasks (uses internal locking)
-        2. Stop CLI sessions
-        3. Update UI for all affected nodes
+        Operation order is load-bearing:
+
+        1. Cancel queue tasks first (acquires internal tree locks) so no new
+           work starts while sessions are being torn down.
+        2. Stop CLI sessions (kills subprocesses).
+        3. Update platform status messages and persist tree state.
         """
-        # 1. Cancel tree queue tasks using the public async method
         logger.info("Cancelling tree queue tasks...")
         cancelled_nodes = await self.tree_queue.cancel_all()
         logger.info(f"Cancelled {len(cancelled_nodes)} nodes")
 
-        # 2. Stop CLI sessions - this kills subprocesses and ensures everything is dead
         logger.info("Stopping all CLI sessions...")
         await self.cli_manager.stop_all()
 
-        # 3. Update UI and persist state for all cancelled nodes
         self.update_cancelled_nodes_ui(cancelled_nodes)
 
         return len(cancelled_nodes)

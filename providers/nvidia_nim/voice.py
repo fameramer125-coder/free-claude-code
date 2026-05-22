@@ -1,7 +1,5 @@
 """NVIDIA NIM / Riva offline ASR for voice notes (provider-owned transport)."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from loguru import logger
@@ -91,5 +89,5 @@ def transcribe_audio_file(
     if results and results[0].alternatives:
         transcript = results[0].alternatives[0].transcript
 
-    logger.debug(f"NIM transcription: {len(transcript)} chars")
+    logger.debug("NIM transcription: {} chars", len(transcript))
     return transcript or "(no speech detected)"

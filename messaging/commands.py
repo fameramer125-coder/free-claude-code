@@ -4,8 +4,6 @@ Extracted from ClaudeMessageHandler to keep handler.py focused on
 core message processing logic.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -18,8 +16,13 @@ if TYPE_CHECKING:
 async def handle_stop_command(
     handler: ClaudeMessageHandler, incoming: IncomingMessage
 ) -> None:
-    """Handle /stop command from messaging platform."""
-    # Reply-scoped stop: reply "/stop" to stop only that task.
+    """Handle /stop command.
+
+    Two modes:
+
+    - **Reply-scoped**: replying ``/stop`` to a message cancels only that task.
+    - **Global**: a bare ``/stop`` cancels everything in-flight.
+    """
     if incoming.is_reply() and incoming.reply_to_message_id:
         reply_id = incoming.reply_to_message_id
         tree = handler.tree_queue.get_tree_for_node(reply_id)
@@ -52,7 +55,6 @@ async def handle_stop_command(
         )
         return
 
-    # Global stop: legacy behavior (stop everything)
     count = await handler.stop_all_tasks()
     msg_id = await handler.platform.queue_send_message(
         incoming.chat_id,
@@ -70,7 +72,7 @@ async def handle_stop_command(
 async def handle_stats_command(
     handler: ClaudeMessageHandler, incoming: IncomingMessage
 ) -> None:
-    """Handle /stats command."""
+    """Handle /stats command — reply with active CLI and tree counts."""
     stats = handler.cli_manager.get_stats()
     tree_count = handler.tree_queue.get_tree_count()
     ctx = handler.get_render_ctx()
@@ -93,7 +95,13 @@ async def handle_stats_command(
 async def _delete_message_ids(
     handler: ClaudeMessageHandler, chat_id: str, msg_ids: set[str]
 ) -> None:
-    """Best-effort delete messages by ID. Sorts numeric IDs descending."""
+    """Best-effort delete messages by ID.
+
+    Numeric IDs are sorted descending so newer messages are deleted first,
+    which reduces the chance of the platform blocking deletion of earlier
+    messages that are still referenced. Non-numeric IDs follow after.
+    Errors are swallowed; a failed delete must never abort the caller.
+    """
     if not msg_ids:
         return
 
@@ -130,20 +138,22 @@ async def _handle_clear_branch(
     incoming: IncomingMessage,
     branch_root_id: str,
 ) -> None:
-    """
-    Clear a branch (replied-to node + all descendants).
+    """Clear a branch (replied-to node + all descendants).
 
-    Order: cancel tasks, delete messages, remove branch, update session store.
+    Operation order is load-bearing:
+
+    1. Cancel tasks first — stops any in-flight work before touching messages.
+    2. Collect and delete platform messages (best-effort).
+    3. Remove the branch from the in-memory tree.
+    4. Persist the updated tree (or drop it entirely if all nodes are gone).
     """
     tree = handler.tree_queue.get_tree_for_node(branch_root_id)
     if not tree:
         return
 
-    # 1) Cancel branch tasks (no stop_all)
     cancelled = await handler.tree_queue.cancel_branch(branch_root_id)
     handler.update_cancelled_nodes_ui(cancelled)
 
-    # 2) Collect message IDs from branch nodes only
     msg_ids: set[str] = set()
     branch_ids = tree.get_descendants(branch_root_id)
     for nid in branch_ids:
@@ -156,15 +166,12 @@ async def _handle_clear_branch(
     if incoming.message_id:
         msg_ids.add(str(incoming.message_id))
 
-    # 3) Delete messages (best-effort)
     await _delete_message_ids(handler, incoming.chat_id, msg_ids)
 
-    # 4) Remove branch from tree
     removed, root_id, removed_entire_tree = await handler.tree_queue.remove_branch(
         branch_root_id
     )
 
-    # 5) Update session store
     try:
         handler.session_store.remove_node_mappings([n.node_id for n in removed])
         if removed_entire_tree:
@@ -180,11 +187,17 @@ async def _handle_clear_branch(
 async def handle_clear_command(
     handler: ClaudeMessageHandler, incoming: IncomingMessage
 ) -> None:
-    """
-    Handle /clear command.
+    """Handle /clear command.
 
-    Reply-scoped: reply to a message to clear that branch (node + descendants).
-    Standalone: global clear (stop all, delete all chat messages, reset store).
+    Two modes:
+
+    - **Reply-scoped**: replying ``/clear`` to a message removes that node and
+      all its descendants from the tree and deletes the associated platform
+      messages.  If the replied-to message is a pending voice note (no tree
+      node yet), it cancels the transcription instead.
+    - **Global**: a bare ``/clear`` stops all tasks, best-effort deletes every
+      recorded message in the chat, then resets the session store and tree
+      queue.
     """
     from messaging.trees import TreeQueueManager
 
@@ -229,14 +242,10 @@ async def handle_clear_command(
         await _handle_clear_branch(handler, incoming, branch_root_id)
         return
 
-    # Global clear
-    # 1) Stop tasks first (ensures no more work is running).
     await handler.stop_all_tasks()
 
-    # 2) Clear chat: best-effort delete messages we can identify.
     msg_ids: set[str] = set()
 
-    # Add any recorded message IDs for this chat (commands, command replies, etc).
     try:
         for mid in handler.session_store.get_message_ids_for_chat(
             incoming.platform, incoming.chat_id
@@ -255,13 +264,11 @@ async def handle_clear_command(
     except Exception as e:
         logger.warning(f"Failed to gather messages for /clear: {e}")
 
-    # Also delete the command message itself.
     if incoming.message_id is not None:
         msg_ids.add(str(incoming.message_id))
 
     await _delete_message_ids(handler, incoming.chat_id, msg_ids)
 
-    # 3) Clear persistent state and reset in-memory queue/tree state.
     try:
         handler.session_store.clear_all()
     except Exception as e:

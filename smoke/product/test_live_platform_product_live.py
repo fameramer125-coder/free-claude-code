@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: messaging platform end-to-end flows."""
 
 import os
 import time

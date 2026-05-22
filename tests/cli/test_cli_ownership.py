@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Contract tests that CLISession owns its runner config (not leaked to callers)."""
 
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: packaged CLI binary behaviour."""
 
 import asyncio
 import os

@@ -3,8 +3,6 @@
 Used by default CI contract tests and by opt-in live smoke scenarios.
 """
 
-from __future__ import annotations
-
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -49,6 +47,7 @@ class SSEEvent:
 
 
 def parse_sse_lines(lines: Iterable[str]) -> list[SSEEvent]:
+    """Parse SSE lines into a list of :class:`SSEEvent` objects."""
     events: list[SSEEvent] = []
     current_event = ""
     data_parts: list[str] = []
@@ -73,6 +72,7 @@ def parse_sse_lines(lines: Iterable[str]) -> list[SSEEvent]:
 
 
 def parse_sse_text(text: str) -> list[SSEEvent]:
+    """Parse a complete SSE text blob into events."""
     return parse_sse_lines(text.splitlines())
 
 

@@ -1,7 +1,5 @@
 """HTML parsing for web_search / web_fetch."""
 
-from __future__ import annotations
-
 import html
 import re
 from html.parser import HTMLParser
@@ -79,6 +77,12 @@ class HTMLTextParser(HTMLParser):
 
 
 def content_text(content: Any) -> str:
+    """Extract plain text from a message content value.
+
+    Accepts a raw string, a list of content-block dicts (JSON-parsed), or a
+    list of Pydantic model objects (``getattr`` path) — all three shapes appear
+    depending on the call site.
+    """
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -100,5 +104,10 @@ def extract_query(text: str) -> str:
 
 
 def extract_url(text: str) -> str:
+    """Return the first ``http(s)://`` URL found in ``text``, or ``text`` itself.
+
+    Trailing ``)``, ``.``, ``,``, ``]`` are stripped — they commonly appear when
+    a URL is embedded in prose or markdown.
+    """
     match = re.search(r"https?://\S+", text)
     return match.group(0).rstrip(").,]") if match else text.strip()

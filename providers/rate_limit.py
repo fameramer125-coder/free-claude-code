@@ -61,7 +61,10 @@ class GlobalRateLimiter:
         self._initialized = True
 
         logger.info(
-            f"GlobalRateLimiter (Provider) initialized ({rate_limit} req / {rate_window}s, max_concurrency={max_concurrency})"
+            "GlobalRateLimiter (Provider) initialized ({} req / {}s, max_concurrency={})",
+            rate_limit,
+            rate_window,
+            max_concurrency,
         )
 
     @classmethod
@@ -135,7 +138,8 @@ class GlobalRateLimiter:
         if now < self._blocked_until:
             wait_time = self._blocked_until - now
             logger.warning(
-                f"Global provider rate limit active (reactive), waiting {wait_time:.1f}s..."
+                "Global provider rate limit active (reactive), waiting {:.1f}s...",
+                wait_time,
             )
             await asyncio.sleep(wait_time)
             waited_reactively = True
@@ -161,7 +165,7 @@ class GlobalRateLimiter:
             seconds: How long to block (default 60s)
         """
         self._blocked_until = time.monotonic() + seconds
-        logger.warning(f"Global provider rate limit set for {seconds:.1f}s (reactive)")
+        logger.warning("Global provider rate limit set for {:.1f}s (reactive)", seconds)
 
     def is_blocked(self) -> bool:
         """Check if currently reactively blocked."""
@@ -232,15 +236,17 @@ class GlobalRateLimiter:
                 last_exc = e
                 if attempt >= max_retries:
                     logger.warning(
-                        f"Rate limit retry exhausted after {max_retries} retries"
+                        "Rate limit retry exhausted after {} retries", max_retries
                     )
                     break
 
                 delay = min(base_delay * (2**attempt), max_delay)
                 delay += random.uniform(0, jitter)
                 logger.warning(
-                    f"Rate limited (429), attempt {attempt + 1}/{max_retries + 1}. "
-                    f"Retrying in {delay:.1f}s..."
+                    "Rate limited (429), attempt {}/{}. Retrying in {:.1f}s...",
+                    attempt + 1,
+                    max_retries + 1,
+                    delay,
                 )
                 self.set_blocked(delay)
                 await asyncio.sleep(delay)
@@ -250,18 +256,20 @@ class GlobalRateLimiter:
                 last_exc = e
                 if attempt >= max_retries:
                     logger.warning(
-                        f"HTTP 429 retry exhausted after {max_retries} retries"
+                        "HTTP 429 retry exhausted after {} retries", max_retries
                     )
                     break
 
                 delay = min(base_delay * (2**attempt), max_delay)
                 delay += random.uniform(0, jitter)
                 logger.warning(
-                    f"HTTP 429 from upstream, attempt {attempt + 1}/{max_retries + 1}. "
-                    f"Retrying in {delay:.1f}s..."
+                    "HTTP 429 from upstream, attempt {}/{}. Retrying in {:.1f}s...",
+                    attempt + 1,
+                    max_retries + 1,
+                    delay,
                 )
                 self.set_blocked(delay)
                 await asyncio.sleep(delay)
 
-        assert last_exc is not None
+        assert last_exc is not None  # set in every except branch above
         raise last_exc

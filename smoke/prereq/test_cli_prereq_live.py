@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: CLI binary availability and invocation."""
 
 import os
 import shutil

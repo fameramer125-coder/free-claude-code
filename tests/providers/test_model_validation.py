@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Model validation tests: per-provider model ID acceptance and rejection."""
 
 import asyncio
 from collections.abc import AsyncIterator

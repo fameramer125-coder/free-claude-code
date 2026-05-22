@@ -50,6 +50,8 @@ def map_error(
         return InvalidRequestError(message, raw_error=str(e))
     if isinstance(e, openai.InternalServerError):
         raw_message = str(e)
+        # Anthropic signals overload via 500 with "overloaded"/"capacity" in the body
+        # rather than a distinct status code when responses go through the OpenAI SDK.
         if "overloaded" in raw_message.lower() or "capacity" in raw_message.lower():
             return OverloadedError(message, raw_error=raw_message)
         return APIError(message, status_code=500, raw_error=str(e))

@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: local provider (Ollama, LM Studio) end-to-end."""
 
 from urllib.parse import urljoin
 

@@ -6,8 +6,6 @@ headers, and assistant text. It is designed for in-place message editing where
 the transcript grows over time and older content must be truncated.
 """
 
-from __future__ import annotations
-
 import json
 from abc import ABC, abstractmethod
 from collections import deque
@@ -207,7 +205,18 @@ class RenderCtx:
 
 
 class TranscriptBuffer:
-    """Maintains an ordered, truncatable transcript of events."""
+    """Ordered, truncatable transcript of CLI events.
+
+    Events are applied in stream order; each call to :meth:`apply` mutates the
+    segment list.  Segments are rendered top-to-bottom by :meth:`render`, which
+    drops the oldest segments when the char limit is exceeded.
+
+    Subagent nesting is tracked via a ``Task``-tool stack: while inside a Task
+    invocation, inner text/thinking events are suppressed and only tool
+    calls/results are shown.  Index-based maps (``_open_thinking_by_index``,
+    ``_open_text_by_index``, ``_open_tools_by_index``) allow streaming deltas
+    to be routed to the correct open segment.
+    """
 
     def __init__(
         self,
@@ -341,7 +350,12 @@ class TranscriptBuffer:
         return seg
 
     def apply(self, ev: dict[str, Any]) -> None:
-        """Apply a parsed event to the transcript."""
+        """Apply a single parsed CLI event, mutating the segment list in place.
+
+        Text/thinking inside a subagent context are silently dropped; only tool
+        events propagate there.  A ``block_stop`` event is treated as a
+        synthetic close for whichever open segment holds that index.
+        """
         et = ev.get("type")
 
         # Subagent rules: inside a Task/subagent, we only show tool calls/results.
@@ -524,8 +538,12 @@ class TranscriptBuffer:
             return
 
     def render(self, ctx: RenderCtx, *, limit_chars: int, status: str | None) -> str:
-        """Render transcript with truncation (drop oldest segments)."""
-        # Filter out empty rendered segments.
+        """Render the transcript, dropping oldest segments until it fits within ``limit_chars``.
+
+        A ``"... (truncated)\\n"`` prefix is prepended when segments were dropped.
+        If nothing fits, the tail of the last dropped segment is preserved as a
+        best-effort fallback before giving up and returning just the status line.
+        """
         rendered: list[str] = []
         for seg in self._segments:
             try:

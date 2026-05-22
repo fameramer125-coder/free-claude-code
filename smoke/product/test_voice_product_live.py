@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: voice transcription in a real environment."""
 
 import os
 from pathlib import Path

@@ -1,11 +1,8 @@
 """OpenRouter provider implementation."""
 
-from __future__ import annotations
-
-from collections.abc import Iterator
 from typing import Any
 
-from core.anthropic import append_request_id, iter_provider_stream_error_sse_events
+from core.anthropic import append_request_id
 from core.anthropic.native_sse_block_policy import (
     NativeSseBlockPolicyState,
     is_terminal_openrouter_done_event,
@@ -23,12 +20,14 @@ from providers.model_listing import (
 
 from .request import build_request_body
 
+# Pinned to prevent silent breakage if OpenRouter changes its default API version.
 _ANTHROPIC_VERSION = "2023-06-01"
 
 
 class OpenRouterProvider(AnthropicMessagesTransport):
     """OpenRouter provider using the native Anthropic-compatible messages API."""
 
+    # OpenRouter sends complete SSE events, not individual lines — use event mode.
     stream_chunk_mode: StreamChunkMode = "event"
 
     def __init__(self, config: ProviderConfig):
@@ -106,20 +105,3 @@ class OpenRouterProvider(AnthropicMessagesTransport):
     def _format_error_message(self, base_message: str, request_id: str | None) -> str:
         """Keep OpenRouter's existing request-id suffix format."""
         return append_request_id(base_message, request_id)
-
-    def _emit_error_events(
-        self,
-        *,
-        request: Any,
-        input_tokens: int,
-        error_message: str,
-        sent_any_event: bool,
-    ) -> Iterator[str]:
-        """Emit the Anthropic SSE error shape expected by Claude clients."""
-        yield from iter_provider_stream_error_sse_events(
-            request=request,
-            input_tokens=input_tokens,
-            error_message=error_message,
-            sent_any_event=sent_any_event,
-            log_raw_sse_events=self._config.log_raw_sse_events,
-        )

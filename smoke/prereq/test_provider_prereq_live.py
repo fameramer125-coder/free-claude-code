@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live prerequisite tests: provider SSE stream shape and latency."""
 
 import time
 

@@ -1,7 +1,5 @@
 """Shared strict sliding-window rate limiting primitives."""
 
-from __future__ import annotations
-
 import asyncio
 import time
 from collections import deque
@@ -31,6 +29,7 @@ class StrictSlidingWindowLimiter:
         self._lock = asyncio.Lock()
 
     async def acquire(self) -> None:
+        """Block until one token is available in the sliding window."""
         while True:
             wait_time = 0.0
             async with self._lock:

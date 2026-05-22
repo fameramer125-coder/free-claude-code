@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Structural contract tests: plan doc, exports, package layout, and pyproject consistency."""
 
 import re
 import tomllib

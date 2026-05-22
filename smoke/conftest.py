@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Shared pytest fixtures for smoke tests."""
 
 from collections.abc import Iterator
 

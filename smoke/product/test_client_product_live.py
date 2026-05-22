@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Live product tests: IDE-client (VS Code / JetBrains) end-to-end flows."""
 
 import shutil
 from pathlib import Path

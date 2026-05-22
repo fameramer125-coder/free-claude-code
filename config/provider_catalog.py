@@ -25,7 +25,18 @@ OLLAMA_DEFAULT_BASE = "http://localhost:11434"
 
 @dataclass(frozen=True, slots=True)
 class ProviderDescriptor:
-    """Metadata for building :class:`~providers.base.ProviderConfig` and factory wiring."""
+    """Metadata for building :class:`~providers.base.ProviderConfig` and factory wiring.
+
+    Credential resolution (implemented in :mod:`providers.registry`):
+
+    - ``static_credential`` set → used as-is; env-var check is skipped entirely.
+    - ``credential_attr`` set → value read from the matching ``Settings`` attribute.
+    - ``credential_env`` set → shown in the auth error when the resolved credential
+      is empty or missing; ``None`` means no API key is required (local providers).
+
+    Known capability strings: ``"chat"``, ``"streaming"``, ``"tools"``,
+    ``"thinking"``, ``"rate_limit"``, ``"native_anthropic"``, ``"local"``.
+    """
 
     provider_id: str
     transport_type: TransportType
@@ -104,8 +115,5 @@ PROVIDER_CATALOG: dict[str, ProviderDescriptor] = {
     ),
 }
 
-# Order matches docs / historical error text; must match PROVIDER_CATALOG keys.
+# Order matches docs / historical error text.
 SUPPORTED_PROVIDER_IDS: tuple[str, ...] = tuple(PROVIDER_CATALOG.keys())
-
-if len(set(SUPPORTED_PROVIDER_IDS)) != len(SUPPORTED_PROVIDER_IDS):
-    raise AssertionError("Duplicate provider ids in PROVIDER_CATALOG key order")

@@ -50,11 +50,8 @@ def is_title_generation_request(request_data: MessagesRequest) -> bool:
 def is_prefix_detection_request(request_data: MessagesRequest) -> tuple[bool, str]:
     """Check if this is a fast prefix detection request.
 
-    Prefix detection requests contain a policy_spec block and
-    a Command: section for extracting shell command prefixes.
-
-    Returns:
-        Tuple of (is_prefix_request, command_string)
+    Claude Code sends a ``<policy_spec>`` block plus a ``Command:`` line when
+    asking the server to classify a shell command's leading token.
     """
     if len(request_data.messages) != 1 or request_data.messages[0].role != "user":
         return False, ""
@@ -62,11 +59,8 @@ def is_prefix_detection_request(request_data: MessagesRequest) -> tuple[bool, st
     content = extract_text_from_content(request_data.messages[0].content)
 
     if "<policy_spec>" in content and "Command:" in content:
-        try:
-            cmd_start = content.rfind("Command:") + len("Command:")
-            return True, content[cmd_start:].strip()
-        except TypeError:
-            return False, ""
+        cmd_start = content.rfind("Command:") + len("Command:")
+        return True, content[cmd_start:].strip()
 
     return False, ""
 
@@ -87,27 +81,24 @@ def is_suggestion_mode_request(request_data: MessagesRequest) -> bool:
 
 def is_filepath_extraction_request(
     request_data: MessagesRequest,
-) -> tuple[bool, str, str]:
+) -> tuple[bool, str]:
     """Check if this is a filepath extraction request.
 
-    Filepath extraction requests have a single user message with
-    "Command:" and "Output:" sections, asking to extract file paths
-    from command output.
-
-    Returns:
-        Tuple of (is_filepath_request, command, output)
+    Claude Code sends a single user message with ``Command:`` and ``Output:``
+    sections when it wants the server to extract file paths read by a shell
+    command.  The filepath hint may appear in the user content or in the system
+    block, depending on the Claude Code version.
     """
     if len(request_data.messages) != 1 or request_data.messages[0].role != "user":
-        return False, "", ""
+        return False, ""
     if request_data.tools:
-        return False, "", ""
+        return False, ""
 
     content = extract_text_from_content(request_data.messages[0].content)
 
     if "Command:" not in content or "Output:" not in content:
-        return False, "", ""
+        return False, ""
 
-    # Match if user content OR system block indicates filepath extraction
     user_has_filepaths = (
         "filepaths" in content.lower() or "<filepaths>" in content.lower()
     )
@@ -119,18 +110,12 @@ def is_filepath_extraction_request(
         or "file paths that this command" in system_text.lower()
     )
     if not user_has_filepaths and not system_has_extract:
-        return False, "", ""
+        return False, ""
 
     cmd_start = content.find("Command:") + len("Command:")
     output_marker = content.find("Output:", cmd_start)
     if output_marker == -1:
-        return False, "", ""
+        return False, ""
 
     command = content[cmd_start:output_marker].strip()
-    output = content[output_marker + len("Output:") :].strip()
-
-    for marker in ["<", "\n\n"]:
-        if marker in output:
-            output = output.split(marker)[0].strip()
-
-    return True, command, output
+    return True, command

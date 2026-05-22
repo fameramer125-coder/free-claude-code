@@ -40,7 +40,18 @@ class BaseProvider(ABC):
     def _is_thinking_enabled(
         self, request: Any, thinking_enabled: bool | None = None
     ) -> bool:
-        """Return whether thinking should be enabled for this request."""
+        """Return whether thinking should be enabled for this request.
+
+        Resolution order (first match wins):
+
+        1. ``thinking_enabled`` kwarg — set by the router from gateway model ID flags.
+        2. ``request.thinking.type == "disabled"`` or ``request.thinking.enabled`` —
+           the request itself can force thinking off (or on) regardless of config.
+        3. ``self._config.enable_thinking`` — the provider-level default.
+
+        Both the ``type`` string form and the ``enabled`` bool form are recognised
+        to handle both current and older Anthropic SDK payloads.
+        """
         thinking = getattr(request, "thinking", None)
         config_enabled = (
             self._config.enable_thinking
