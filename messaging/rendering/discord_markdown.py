@@ -1,8 +1,4 @@
-"""Discord markdown utilities.
-
-Discord uses standard markdown: **bold**, *italic*, `code`, ```code block```.
-Used by the message handler and Discord platform adapter.
-"""
+"""Discord markdown utilities (standard markdown: bold, italic, code)."""
 
 from markdown_it import MarkdownIt
 

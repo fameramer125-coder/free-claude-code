@@ -1,9 +1,4 @@
-"""
-Session Store for Messaging Platforms
-
-Provides persistent storage for mapping platform messages to Claude CLI session IDs
-and message trees for conversation continuation.
-"""
+"""Persistent session store: message→session mappings and conversation trees."""
 
 import contextlib
 import json
@@ -17,12 +12,7 @@ from loguru import logger
 
 
 class SessionStore:
-    """
-    Persistent storage for message ↔ Claude session mappings and message trees.
-
-    Uses a JSON file for storage with thread-safe operations.
-    Platform-agnostic: works with any messaging platform.
-    """
+    """Thread-safe JSON-backed store for message↔session mappings and conversation trees."""
 
     def __init__(
         self,
@@ -92,11 +82,13 @@ class SessionStore:
                     self._message_log_ids[chat_key] = seen
 
             logger.info(
-                f"Loaded {len(self._trees)} trees and "
-                f"{sum(len(v) for v in self._message_log.values())} msg_ids from {self.storage_path}"
+                "Loaded {} trees and {} msg_ids from {}",
+                len(self._trees),
+                sum(len(v) for v in self._message_log.values()),
+                self.storage_path,
             )
         except Exception as e:
-            logger.error(f"Failed to load sessions: {e}")
+            logger.error("Failed to load sessions: {}", e)
 
     def _snapshot(self) -> dict:
         """Snapshot current state for serialization. Caller must hold self._lock."""
@@ -148,13 +140,12 @@ class SessionStore:
         try:
             self._write_data(snapshot)
         except Exception as e:
-            logger.error(f"Failed to save sessions: {e}")
+            logger.error("Failed to save sessions: {}", e)
             with self._lock:
                 self._dirty = True
 
     def _flush_save(self) -> dict:
-        """Cancel pending timer and snapshot current state. Caller must hold self._lock.
-        Returns snapshot dict; caller must call _write_data(snapshot) outside the lock."""
+        """Cancel pending timer and snapshot state; caller holds lock, must write outside it."""
         if self._save_timer is not None:
             self._save_timer.cancel()
             self._save_timer = None
@@ -168,7 +159,7 @@ class SessionStore:
         try:
             self._write_data(snapshot)
         except Exception as e:
-            logger.error(f"Failed to save sessions: {e}")
+            logger.error("Failed to save sessions: {}", e)
             with self._lock:
                 self._dirty = True
 
@@ -234,20 +225,12 @@ class SessionStore:
         try:
             self._write_data(snapshot)
         except Exception as e:
-            logger.error(f"Failed to save sessions: {e}")
+            logger.error("Failed to save sessions: {}", e)
             with self._lock:
                 self._dirty = True
 
-    # ==================== Tree Methods ====================
-
     def save_tree(self, root_id: str, tree_data: dict) -> None:
-        """
-        Save a message tree.
-
-        Args:
-            root_id: Root node ID of the tree
-            tree_data: Serialized tree data from tree.to_dict()
-        """
+        """Persist a serialized message tree keyed by root_id."""
         with self._lock:
             self._trees[root_id] = tree_data
 
@@ -256,7 +239,7 @@ class SessionStore:
                 self._node_to_tree[node_id] = root_id
 
             self._schedule_save()
-            logger.debug(f"Saved tree {root_id}")
+            logger.debug("Saved tree {}", root_id)
 
     def get_tree(self, root_id: str) -> dict | None:
         """Get a tree by its root ID."""

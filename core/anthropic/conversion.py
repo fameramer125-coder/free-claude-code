@@ -24,12 +24,7 @@ class ReasoningReplayMode(StrEnum):
 
 
 def _openai_reject_native_only_top_level_fields(request_data: Any) -> None:
-    """OpenAI chat providers may only convert known top-level request fields.
-
-    First-class model fields (e.g. ``context_management``) are not forwarded to
-    the OpenAI API but are allowed so clients do not hit spurious 400s.
-    Unknown extra keys (``__pydantic_extra__``) are still rejected.
-    """
+    """Raise OpenAIConversionError if the request contains unknown extra keys."""
     if not isinstance(request_data, BaseModel):
         return
     extra = getattr(request_data, "__pydantic_extra__", None)
@@ -85,12 +80,7 @@ def _think_tag_content(reasoning: str) -> str:
 
 @dataclass
 class _PendingAfterTools:
-    """Assistant content that appears after ``tool_use`` in an Anthropic message.
-
-    OpenAI ``chat.completions`` cannot place assistant text after ``tool_calls`` in the
-    same message, so it is deferred until the corresponding ``role: tool`` results have
-    been replayed in order.
-    """
+    """Deferred assistant content after tool_use (OpenAI cannot place text after tool_calls)."""
 
     # Tool use IDs still missing a ``role: tool`` result before post-tool text may be replayed.
     remaining_tool_ids: set[str] = field(default_factory=set)

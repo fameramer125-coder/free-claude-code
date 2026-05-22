@@ -475,13 +475,7 @@ def test_convert_tool_use_none_input():
 
 
 def test_convert_assistant_interleaved_order_preserved():
-    """Interleaved thinking, text, tool_use should preserve thinking+text order in content.
-
-    Bug: Current implementation collects all thinking, then all text, then tool_calls.
-    Original order [thinking, text, thinking, tool_use] becomes [all thinking, all text, tool_calls],
-    losing the interleaving. Content string should reflect original block order for thinking+text.
-    Tool calls stay at end (API constraint).
-    """
+    """Thinking+text order is preserved; tool_calls stay at end (API constraint)."""
     content = [
         MockBlock(type="thinking", thinking="First thought."),
         MockBlock(type="text", text="Here is the answer."),
@@ -502,11 +496,7 @@ def test_convert_assistant_interleaved_order_preserved():
 
 
 def test_convert_user_message_text_before_tool_result_order():
-    """User message with text then tool_result should preserve order: user text first, then tool.
-
-    Bug: Current implementation emits tool_result immediately, then user text at end.
-    Anthropic order is typically: user says something, then provides tool results.
-    """
+    """User text before tool_result should emit the user message first, then the tool result."""
     content = [
         MockBlock(type="text", text="Please use this result:"),
         MockBlock(type="tool_result", tool_use_id="t1", content="42"),

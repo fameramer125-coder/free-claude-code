@@ -36,10 +36,7 @@ class TestMessagingRateLimiter:
 
     @pytest.mark.asyncio
     async def test_compaction(self):
-        """
-        Verify multiple rapid requests with same dedup_key are compacted.
-        Logic ported from verify_limiter.py
-        """
+        """Verify rapid requests with the same dedup_key are compacted to the latest."""
         await MessagingRateLimiter.shutdown_instance(timeout=0.1)
         limiter = await MessagingRateLimiter.get_instance(rate_limit=1, rate_window=1.0)
 

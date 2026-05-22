@@ -42,11 +42,7 @@ async def stream_web_server_tool_response(
     web_fetch_egress: WebFetchEgressPolicy,
     verbose_client_errors: bool = False,
 ) -> AsyncIterator[str]:
-    """Stream a minimal Anthropic-shaped turn for forced `web_search` / `web_fetch` (local fallback).
-
-    When `ENABLE_WEB_SERVER_TOOLS` is on, this is a proxy-side execution path — not a full
-    hosted Anthropic citation or encrypted-content pipeline.
-    """
+    """Stream a minimal Anthropic-shaped SSE turn for proxy-side web_search/web_fetch execution."""
     tool_name = forced_server_tool_name(request)
     if tool_name is None or not has_tool_named(request, tool_name):
         return

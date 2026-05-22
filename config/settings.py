@@ -53,11 +53,7 @@ def _env_file_contains_key(path: Path, key: str) -> bool:
 
 
 def _env_file_value(path: Path, key: str) -> str | None:
-    """Return the string value for key if the file defines it, otherwise None.
-
-    A bare ``KEY=`` entry (no value) returns ``""``; callers can distinguish
-    "defined with no value" from "not defined at all" via the None sentinel.
-    """
+    """Return the value for key if the file defines it; bare KEY= returns ''; absent returns None."""
     if not path.is_file():
         return None
 
@@ -73,11 +69,7 @@ def _env_file_value(path: Path, key: str) -> str | None:
 
 
 def _env_file_override(model_config: Mapping[str, Any], key: str) -> str | None:
-    """Return the value from the last configured env file that explicitly defines key.
-
-    Later files in the list take precedence, matching the priority order in
-    :func:`_env_files` (user config < repo .env < FCC_ENV_FILE).
-    """
+    """Return the value from the last configured env file that explicitly defines key."""
     configured_value: str | None = None
     for env_file in _configured_env_files(model_config):
         value = _env_file_value(env_file, key)
@@ -448,11 +440,7 @@ class Settings(BaseSettings):
         return Settings.parse_model_name(self.model)
 
     def resolve_model(self, claude_model_name: str) -> str:
-        """Resolve a Claude model name to the configured provider/model string.
-
-        Classifies the incoming Claude model (opus/sonnet/haiku) and
-        returns the model-specific override if configured, otherwise the fallback MODEL.
-        """
+        """Resolve a Claude model name to the configured provider/model string (tier-specific or fallback)."""
         name_lower = claude_model_name.lower()
         if "opus" in name_lower and self.model_opus is not None:
             return self.model_opus

@@ -98,13 +98,7 @@ class ClaudeProxyService:
         self._token_counter = token_counter
 
     def create_message(self, request_data: MessagesRequest) -> object:
-        """Route a message request and return an Anthropic SSE StreamingResponse.
-
-        Decision order: web-server-tool shortcut → local optimizations → provider stream.
-        ``ProviderError`` is re-raised directly so the app-level handler in
-        ``app.py`` formats it; all other exceptions are wrapped as HTTP 500 to
-        keep a stable error shape for clients regardless of the failure source.
-        """
+        """Route a message request and return an Anthropic SSE StreamingResponse."""
         try:
             _require_non_empty_messages(request_data.messages)
 

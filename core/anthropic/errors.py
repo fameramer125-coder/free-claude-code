@@ -9,12 +9,7 @@ def get_user_facing_error_message(
     *,
     read_timeout_s: float | None = None,
 ) -> str:
-    """Return a readable, non-empty error message for users.
-
-    Known transport and OpenAI SDK exception types are mapped to stable wording
-    before falling back to ``str(e)``, so empty or noisy SDK messages do not skip
-    the mapped path.
-    """
+    """Return a readable, non-empty error message for users (maps known exception types)."""
     if isinstance(e, httpx.ReadTimeout):
         if read_timeout_s is not None:
             return f"Provider request timed out after {read_timeout_s:g}s."

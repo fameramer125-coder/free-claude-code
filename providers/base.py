@@ -11,11 +11,7 @@ from providers.model_listing import ProviderModelInfo, model_infos_from_ids
 
 
 class ProviderConfig(BaseModel):
-    """Configuration for a provider.
-
-    Base fields apply to all providers. Provider-specific parameters
-    (e.g. NIM temperature, top_p) are passed by the provider constructor.
-    """
+    """Base configuration fields shared by all providers."""
 
     api_key: str
     base_url: str | None = None
@@ -40,18 +36,7 @@ class BaseProvider(ABC):
     def _is_thinking_enabled(
         self, request: Any, thinking_enabled: bool | None = None
     ) -> bool:
-        """Return whether thinking should be enabled for this request.
-
-        Resolution order (first match wins):
-
-        1. ``thinking_enabled`` kwarg — set by the router from gateway model ID flags.
-        2. ``request.thinking.type == "disabled"`` or ``request.thinking.enabled`` —
-           the request itself can force thinking off (or on) regardless of config.
-        3. ``self._config.enable_thinking`` — the provider-level default.
-
-        Both the ``type`` string form and the ``enabled`` bool form are recognised
-        to handle both current and older Anthropic SDK payloads.
-        """
+        """Return whether thinking is enabled (kwarg > request field > provider config)."""
         thinking = getattr(request, "thinking", None)
         config_enabled = (
             self._config.enable_thinking
@@ -80,11 +65,7 @@ class BaseProvider(ABC):
     def preflight_stream(
         self, request: Any, *, thinking_enabled: bool | None = None
     ) -> None:
-        """Eagerly validate/build the upstream request before opening an SSE stream.
-
-        Subclasses with ``_build_request_body`` (OpenAI and native) raise
-        :class:`providers.exceptions.InvalidRequestError` on conversion failures.
-        """
+        """Eagerly validate the upstream request by calling _build_request_body if present."""
         build = getattr(self, "_build_request_body", None)
         if build is None:
             return

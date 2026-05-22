@@ -14,11 +14,7 @@ from .data import MessageNode, MessageState, MessageTree
 
 
 class TreeRepository:
-    """
-    In-memory index of trees and node-to-root mappings.
-
-    Used only by :class:`TreeQueueManager`; kept as a named type for tests.
-    """
+    """In-memory index of trees and node-to-root mappings (used by TreeQueueManager)."""
 
     def __init__(self) -> None:
         self._trees: dict[str, MessageTree] = {}  # root_id -> tree
@@ -75,15 +71,7 @@ class TreeRepository:
         return tree.get_queue_size() if tree else 0
 
     def resolve_parent_node_id(self, msg_id: str) -> str | None:
-        """
-        Resolve a message ID to the actual parent node ID.
-
-        Handles the case where msg_id is a status message ID
-        (which maps to the tree but isn't an actual node).
-
-        Returns:
-            The node_id to use as parent, or None if not found
-        """
+        """Resolve a message or status-message ID to the actual parent node ID."""
         tree = self.get_tree_for_node(msg_id)
         if not tree:
             return None
@@ -98,12 +86,7 @@ class TreeRepository:
         return None
 
     def get_pending_children(self, node_id: str) -> list[MessageNode]:
-        """
-        Get all pending child nodes (recursively) of a given node.
-
-        Used for error propagation - when a node fails, its pending
-        children should also be marked as failed.
-        """
+        """Return all pending descendants of node_id (for error propagation)."""
         tree = self.get_tree_for_node(node_id)
         if not tree:
             return []
@@ -138,12 +121,7 @@ class TreeRepository:
             self._node_to_tree.pop(nid, None)
 
     def remove_tree(self, root_id: str) -> MessageTree | None:
-        """
-        Remove a tree and all its node mappings from the repository.
-
-        Returns:
-            The removed tree, or None if not found.
-        """
+        """Remove a tree and its node mappings; returns the removed tree or None."""
         tree = self._trees.pop(root_id, None)
         if not tree:
             return None
@@ -184,9 +162,7 @@ class TreeRepository:
 
 
 class TreeQueueProcessor:
-    """
-    Per-tree async queue processing (one manager owns one processor instance).
-    """
+    """Per-tree async queue processing (one instance per TreeQueueManager)."""
 
     def __init__(
         self,
@@ -246,7 +222,9 @@ class TreeQueueProcessor:
         """Process a single node and then check the queue."""
         if node.state == MessageState.ERROR:
             logger.info(
-                f"Skipping node {node.node_id} as it is already in state {node.state}"
+                "Skipping node {} as it is already in state {}",
+                node.node_id,
+                node.state,
             )
             await self._process_next(tree, processor)
             return
@@ -254,7 +232,7 @@ class TreeQueueProcessor:
         try:
             await processor(node.node_id, node)
         except asyncio.CancelledError:
-            logger.info(f"Task for node {node.node_id} was cancelled")
+            logger.info("Task for node {} was cancelled", node.node_id)
             raise
         except Exception as e:
             d = get_settings().log_messaging_error_details
@@ -285,11 +263,11 @@ class TreeQueueProcessor:
 
             if not next_node_id:
                 tree.set_processing_state(None, False)
-                logger.debug(f"Tree {tree.root_id} queue empty, marking as free")
+                logger.debug("Tree {} queue empty, marking as free", tree.root_id)
                 return
 
             tree.set_processing_state(next_node_id, True)
-            logger.info(f"Processing next queued node {next_node_id}")
+            logger.info("Processing next queued node {}", next_node_id)
 
             node = tree.get_node(next_node_id)
             if node:
@@ -307,17 +285,12 @@ class TreeQueueProcessor:
         node_id: str,
         processor: Callable[[str, MessageNode], Awaitable[None]],
     ) -> bool:
-        """
-        Enqueue a node or start processing immediately.
-
-        Returns:
-            True if queued, False if processing immediately
-        """
+        """Enqueue node or start immediately; returns True if queued, False if starting now."""
         async with tree.with_lock():
             if tree.is_processing:
                 tree.put_queue_unlocked(node_id)
                 queue_size = tree.get_queue_size()
-                logger.info(f"Queued node {node_id}, position {queue_size}")
+                logger.info("Queued node {}, position {}", node_id, queue_size)
                 return True
             else:
                 tree.set_processing_state(node_id, True)
@@ -335,12 +308,7 @@ class TreeQueueProcessor:
 
 
 class TreeQueueManager:
-    """
-    Manages multiple message trees: index + async processing.
-
-    Each new conversation creates a new tree.
-    Replies to existing messages add nodes to existing trees.
-    """
+    """Manages multiple message trees; new conversations create trees, replies extend them."""
 
     def __init__(
         self,
@@ -364,17 +332,7 @@ class TreeQueueManager:
         incoming: IncomingMessage,
         status_message_id: str,
     ) -> MessageTree:
-        """
-        Create a new tree with a root node.
-
-        Args:
-            node_id: ID for the root node
-            incoming: The incoming message
-            status_message_id: Bot's status message ID
-
-        Returns:
-            The created MessageTree
-        """
+        """Create and return a new MessageTree with node_id as root."""
         async with self._lock:
             root_node = MessageNode(
                 node_id=node_id,
@@ -386,7 +344,7 @@ class TreeQueueManager:
             tree = MessageTree(root_node)
             self._repository.add_tree(node_id, tree)
 
-            logger.info(f"Created new tree with root {node_id}")
+            logger.info("Created new tree with root {}", node_id)
             return tree
 
     async def add_to_tree(
@@ -396,18 +354,7 @@ class TreeQueueManager:
         incoming: IncomingMessage,
         status_message_id: str,
     ) -> tuple[MessageTree, MessageNode]:
-        """
-        Add a reply as a child node to an existing tree.
-
-        Args:
-            parent_node_id: ID of the parent message
-            node_id: ID for the new node
-            incoming: The incoming reply message
-            status_message_id: Bot's status message ID
-
-        Returns:
-            Tuple of (tree, new_node)
-        """
+        """Add node_id as a child of parent_node_id; returns (tree, new_node)."""
         async with self._lock:
             if not self._repository.has_node(parent_node_id):
                 raise ValueError(f"Parent node {parent_node_id} not found in any tree")
@@ -426,7 +373,7 @@ class TreeQueueManager:
         async with self._lock:
             self._repository.register_node(node_id, tree.root_id)
 
-        logger.info(f"Added node {node_id} to tree {tree.root_id}")
+        logger.info("Added node {} to tree {}", node_id, tree.root_id)
         return tree, node
 
     def get_tree(self, root_id: str) -> MessageTree | None:
@@ -458,22 +405,10 @@ class TreeQueueManager:
         node_id: str,
         processor: Callable[[str, MessageNode], Awaitable[None]],
     ) -> bool:
-        """
-        Enqueue a node for processing.
-
-        If the tree is not busy, processing starts immediately.
-        If busy, the message is queued.
-
-        Args:
-            node_id: Node to process
-            processor: Async function to process the node
-
-        Returns:
-            True if queued, False if processing immediately
-        """
+        """Enqueue node_id for processing; returns True if queued, False if starting now."""
         tree = self._repository.get_tree_for_node(node_id)
         if not tree:
-            logger.error(f"No tree found for node {node_id}")
+            logger.error("No tree found for node {}", node_id)
             return False
 
         return await self._processor.enqueue_and_start(tree, node_id, processor)
@@ -492,17 +427,7 @@ class TreeQueueManager:
         error_message: str,
         propagate_to_children: bool = True,
     ) -> list[MessageNode]:
-        """
-        Mark a node as ERROR and optionally propagate to pending children.
-
-        Args:
-            node_id: The node to mark as error
-            error_message: Error description
-            propagate_to_children: If True, also mark pending children as error
-
-        Returns:
-            List of all nodes marked as error (including children)
-        """
+        """Mark node ERROR and optionally propagate to pending children; returns affected nodes."""
         tree = self._repository.get_tree_for_node(node_id)
         if not tree:
             return []
@@ -528,12 +453,7 @@ class TreeQueueManager:
         return affected
 
     async def cancel_tree(self, root_id: str) -> list[MessageNode]:
-        """
-        Cancel all queued and in-progress messages in a tree.
-
-        Updates node states to ERROR and returns list of affected nodes
-        that were actually active or in the current processing queue.
-        """
+        """Cancel all queued/in-progress nodes in a tree; returns affected nodes."""
         tree = self._repository.get_tree(root_id)
         if not tree:
             return []
@@ -569,20 +489,15 @@ class TreeQueueManager:
 
         if cancelled_nodes:
             logger.info(
-                f"Cancelled {len(cancelled_nodes)} active nodes in tree {root_id}"
+                "Cancelled {} active nodes in tree {}", len(cancelled_nodes), root_id
             )
         if cleanup_count:
-            logger.info(f"Cleaned up {cleanup_count} stale nodes in tree {root_id}")
+            logger.info("Cleaned up {} stale nodes in tree {}", cleanup_count, root_id)
 
         return cancelled_nodes
 
     async def cancel_node(self, node_id: str) -> list[MessageNode]:
-        """
-        Cancel a single node (queued or in-progress) without affecting other nodes.
-
-        Returns:
-            List containing the cancelled node if it was cancellable, else empty list.
-        """
+        """Cancel a single queued or in-progress node; returns [node] or [] if not cancellable."""
         tree = self._repository.get_tree_for_node(node_id)
         if not tree:
             return []
@@ -619,10 +534,7 @@ class TreeQueueManager:
             return all_cancelled
 
     def cleanup_stale_nodes(self) -> int:
-        """
-        Mark any PENDING or IN_PROGRESS nodes in all trees as ERROR.
-        Used on startup to reconcile restored state.
-        """
+        """Mark all PENDING/IN_PROGRESS nodes as ERROR (called on startup to reconcile state)."""
         count = 0
         for tree in self._repository.all_trees():
             for node in tree.all_nodes():
@@ -630,7 +542,7 @@ class TreeQueueManager:
                     tree.set_node_error_sync(node, "Lost during server restart")
                     count += 1
         if count:
-            logger.info(f"Cleaned up {count} stale nodes during startup")
+            logger.info("Cleaned up {} stale nodes during startup", count)
         return count
 
     def get_tree_count(self) -> int:
@@ -656,9 +568,7 @@ class TreeQueueManager:
         self._repository.register_node(node_id, root_id)
 
     async def cancel_branch(self, branch_root_id: str) -> list[MessageNode]:
-        """
-        Cancel all PENDING/IN_PROGRESS nodes in the subtree (branch_root + descendants).
-        """
+        """Cancel all PENDING/IN_PROGRESS nodes in the subtree; returns cancelled nodes."""
         tree = self._repository.get_tree_for_node(branch_root_id)
         if not tree:
             return []
@@ -685,20 +595,15 @@ class TreeQueueManager:
                     cancelled.append(node)
 
         if cancelled:
-            logger.info(f"Cancelled {len(cancelled)} nodes in branch {branch_root_id}")
+            logger.info(
+                "Cancelled {} nodes in branch {}", len(cancelled), branch_root_id
+            )
         return cancelled
 
     async def remove_branch(
         self, branch_root_id: str
     ) -> tuple[list[MessageNode], str, bool]:
-        """
-        Remove a branch (subtree) from the tree.
-
-        If branch_root is the tree root, removes the entire tree.
-
-        Returns:
-            (removed_nodes, root_id, removed_entire_tree)
-        """
+        """Remove a subtree; returns (removed_nodes, root_id, removed_entire_tree)."""
         tree = self._repository.get_tree_for_node(branch_root_id)
         if not tree:
             return ([], "", False)

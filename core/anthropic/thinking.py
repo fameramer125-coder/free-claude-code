@@ -21,11 +21,7 @@ class ContentChunk:
 
 
 class ThinkTagParser:
-    """
-    Streaming parser for ``<think>...</think>`` tags.
-
-    Handles partial tags at chunk boundaries by buffering.
-    """
+    """Streaming parser for <think>...</think> tags; buffers partial tags at chunk boundaries."""
 
     OPEN_TAG = "<think>"
     CLOSE_TAG = "</think>"

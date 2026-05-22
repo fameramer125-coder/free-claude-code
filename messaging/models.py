@@ -7,11 +7,7 @@ from typing import Any
 
 @dataclass
 class IncomingMessage:
-    """
-    Platform-agnostic incoming message.
-
-    Adapters convert platform-specific events to this format.
-    """
+    """Platform-agnostic incoming message; adapters convert platform-specific events to this format."""
 
     text: str
     chat_id: str

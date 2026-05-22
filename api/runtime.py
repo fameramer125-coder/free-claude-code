@@ -97,13 +97,7 @@ class AppRuntime:
         return cls(app=app, settings=settings or get_settings())
 
     async def startup(self) -> None:
-        """Start all runtime resources and wire them to ``app.state``.
-
-        The provider registry is assigned to ``app.state`` before validation so
-        that the cleanup path in the exception handler has a concrete reference.
-        Messaging startup failure is logged but does not abort the proxy — the
-        API proxy remains operational without messaging infrastructure.
-        """
+        """Start all runtime resources and wire them to app.state."""
         logger.info("Starting Claude Code Proxy...")
         self._provider_registry = ProviderRegistry()
         self.app.state.provider_registry = self._provider_registry
@@ -159,13 +153,7 @@ class AppRuntime:
         logger.info("Server shut down cleanly")
 
     async def _start_messaging_if_configured(self) -> None:
-        """Start the messaging platform when one is configured.
-
-        Both ``ImportError`` (messaging extras not installed) and general
-        exceptions are caught and logged rather than re-raised — messaging is
-        optional infrastructure and its failure must not prevent the API proxy
-        from starting.
-        """
+        """Start the messaging platform if configured; errors are logged, never re-raised."""
         try:
             from messaging.platforms.factory import (
                 MessagingPlatformOptions,
@@ -299,12 +287,7 @@ class AppRuntime:
         self.app.state.cli_manager = self.cli_manager
 
     async def _shutdown_limiter(self) -> None:
-        """Shut down the singleton rate limiter if the messaging module is present.
-
-        Import is deferred to match startup: if messaging extras were never
-        loaded (``ImportError`` during startup), this import will also fail and
-        the debug log is the correct outcome — there is nothing to shut down.
-        """
+        """Shut down the singleton rate limiter if the messaging module is present."""
         verbose = self.settings.log_api_error_tracebacks
         try:
             from messaging.limiter import MessagingRateLimiter

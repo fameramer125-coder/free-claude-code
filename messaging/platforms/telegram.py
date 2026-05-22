@@ -1,8 +1,4 @@
-"""
-Telegram Platform Adapter
-
-Implements MessagingPlatform for Telegram using python-telegram-bot.
-"""
+"""Telegram platform adapter using python-telegram-bot (Bot API)."""
 
 import asyncio
 import contextlib
@@ -49,12 +45,7 @@ except ImportError:
 
 
 class TelegramPlatform(MessagingPlatform):
-    """
-    Telegram messaging platform adapter.
-
-    Uses python-telegram-bot (BoT API) for Telegram access.
-    Requires a Bot Token from @BotFather.
-    """
+    """Telegram messaging platform adapter (Bot API, requires token from @BotFather)."""
 
     name = "telegram"
 
@@ -170,11 +161,15 @@ class TelegramPlatform(MessagingPlatform):
                 if attempt < max_retries - 1:
                     wait_time = 2 * (attempt + 1)
                     logger.warning(
-                        f"Connection failed (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {wait_time}s..."
+                        "Connection failed (attempt {}/{}): {}. Retrying in {}s...",
+                        attempt + 1,
+                        max_retries,
+                        e,
+                        wait_time,
                     )
                     await asyncio.sleep(wait_time)
                 else:
-                    logger.error(f"Failed to connect after {max_retries} attempts")
+                    logger.error("Failed to connect after {} attempts", max_retries)
                     raise
 
         # Initialize rate limiter
@@ -232,12 +227,16 @@ class TelegramPlatform(MessagingPlatform):
                 if attempt < max_retries - 1:
                     wait_time = 2**attempt  # 1s, 2s, 4s
                     logger.warning(
-                        f"Telegram API network error (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {wait_time}s..."
+                        "Telegram API network error (attempt {}/{}): {}. Retrying in {}s...",
+                        attempt + 1,
+                        max_retries,
+                        e,
+                        wait_time,
                     )
                     await asyncio.sleep(wait_time)
                 else:
                     logger.error(
-                        f"Telegram API failed after {max_retries} attempts: {e}"
+                        "Telegram API failed after {} attempts: {}", max_retries, e
                     )
                     raise
             except RetryAfter as e:
@@ -250,7 +249,7 @@ class TelegramPlatform(MessagingPlatform):
                 else:
                     wait_secs = float(retry_after)
 
-                logger.warning(f"Rate limited by Telegram, waiting {wait_secs}s...")
+                logger.warning("Rate limited by Telegram, waiting {}s...", wait_secs)
                 await asyncio.sleep(wait_secs)
                 # We don't increment attempt here, as this is a specific instruction
                 return await func(*args, **kwargs)
@@ -509,7 +508,7 @@ class TelegramPlatform(MessagingPlatform):
 
         # Security check
         if self.allowed_user_id and user_id != str(self.allowed_user_id).strip():
-            logger.warning(f"Unauthorized access attempt from {user_id}")
+            logger.warning("Unauthorized access attempt from {}", user_id)
             return
 
         message_id = str(update.message.message_id)
@@ -594,7 +593,7 @@ class TelegramPlatform(MessagingPlatform):
         chat_id = str(update.effective_chat.id)
 
         if self.allowed_user_id and user_id != str(self.allowed_user_id).strip():
-            logger.warning(f"Unauthorized voice access attempt from {user_id}")
+            logger.warning("Unauthorized voice access attempt from {}", user_id)
             return
 
         if not self._message_handler:

@@ -19,10 +19,7 @@ class TestProviderRateLimiter:
 
     @pytest.mark.asyncio
     async def test_proactive_throttling(self):
-        """
-        Test proactive throttling.
-        Logic ported from verify_provider_limiter.py
-        """
+        """Test that the proactive sliding-window limiter throttles requests to the configured rate."""
         # Re-init with tight limits: 1 request per 0.25 second
         GlobalRateLimiter.reset_instance()
         limiter = GlobalRateLimiter.get_instance(rate_limit=1, rate_window=0.25)

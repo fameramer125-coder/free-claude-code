@@ -1,10 +1,4 @@
-"""Public feature inventory for contract, prerequisite, and product smoke tests.
-
-The inventory is intentionally explicit. README-advertised behavior and exposed
-public surface area must have deterministic pytest contract coverage plus a
-product E2E scenario when that behavior is a user-facing product path. Liveness
-and route probes live in ``smoke/prereq`` and do not count as product coverage.
-"""
+"""Public feature inventory for contract, prerequisite, and product smoke tests."""
 
 from dataclasses import dataclass
 from typing import Literal

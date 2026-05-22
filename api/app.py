@@ -22,11 +22,7 @@ from .validation_log import summarize_request_validation_body
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager used when ``lifespan_enabled=True`` (tests/dev).
-
-    Production ASGI uses :class:`GracefulLifespanApp` instead, which implements
-    the lifespan protocol directly for cleaner startup-failure reporting.
-    """
+    """Application lifespan manager for tests/dev (production uses GracefulLifespanApp)."""
     runtime = AppRuntime.for_app(app, settings=get_settings())
     await runtime.startup()
 
@@ -51,11 +47,7 @@ class GracefulLifespanApp:
         await self._lifespan(receive, send)
 
     async def _lifespan(self, receive: Receive, send: Send) -> None:
-        """Drive the ASGI lifespan protocol, catching startup failures cleanly.
-
-        ``startup_complete`` guards against calling ``runtime.shutdown()`` when
-        startup raised — the runtime may be only partially initialised in that case.
-        """
+        """Drive the ASGI lifespan protocol, catching startup failures cleanly."""
         settings = get_settings()
         runtime = AppRuntime.for_app(self.app, settings=settings)
         startup_complete = False
@@ -176,10 +168,5 @@ def create_app(*, lifespan_enabled: bool = True) -> FastAPI:
 
 
 def create_asgi_app() -> GracefulLifespanApp:
-    """Create the production ASGI app with graceful lifespan failure reporting.
-
-    ``lifespan_enabled=False`` prevents FastAPI from running its own lifespan
-    context manager — :class:`GracefulLifespanApp` drives the ASGI lifespan
-    protocol directly, so enabling both would execute startup/shutdown twice.
-    """
+    """Create the production ASGI app with graceful lifespan failure reporting."""
     return GracefulLifespanApp(create_app(lifespan_enabled=False))

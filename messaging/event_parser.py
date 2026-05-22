@@ -1,8 +1,4 @@
-"""CLI event parser for Claude Code CLI output.
-
-This parser emits an ordered stream of low-level events suitable for building a
-Claude Code-like transcript in messaging UIs.
-"""
+"""CLI event parser: converts raw Claude Code CLI output into structured transcript events."""
 
 from typing import Any
 
@@ -10,17 +6,7 @@ from loguru import logger
 
 
 def parse_cli_event(event: Any, *, log_raw_cli: bool = False) -> list[dict]:
-    """
-    Parse a CLI event and return a structured result.
-
-    Args:
-        event: Raw event dictionary from CLI
-        log_raw_cli: When True, log full error text from the CLI. Default is
-            metadata-only (lengths / exit codes) to avoid leaking user content.
-
-    Returns:
-        List of parsed event dicts. Empty list if not recognized.
-    """
+    """Parse a raw CLI event dict into structured events; returns empty list if unrecognized."""
     if not isinstance(event, dict):
         return []
 
@@ -152,7 +138,7 @@ def parse_cli_event(event: Any, *, log_raw_cli: bool = False) -> list[dict]:
         code = event.get("code", 0)
         stderr = event.get("stderr")
         if code == 0:
-            logger.debug(f"CLI_PARSER: Successful exit (code={code})")
+            logger.debug("CLI_PARSER: Successful exit (code={})", code)
             return [{"type": "complete", "status": "success"}]
         else:
             # Non-zero exit is an error
@@ -177,5 +163,5 @@ def parse_cli_event(event: Any, *, log_raw_cli: bool = False) -> list[dict]:
 
     # Log unrecognized events for debugging
     if etype:
-        logger.debug(f"CLI_PARSER: Unrecognized event type: {etype}")
+        logger.debug("CLI_PARSER: Unrecognized event type: {}", etype)
     return []

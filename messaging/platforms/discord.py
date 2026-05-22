@@ -1,8 +1,4 @@
-"""
-Discord Platform Adapter
-
-Implements MessagingPlatform for Discord using discord.py.
-"""
+"""Discord platform adapter using discord.py (Bot API)."""
 
 import asyncio
 import contextlib
@@ -77,12 +73,7 @@ else:
 
 
 class DiscordPlatform(MessagingPlatform):
-    """
-    Discord messaging platform adapter.
-
-    Uses discord.py for Discord access.
-    Requires a Bot Token from Discord Developer Portal and message_content intent.
-    """
+    """Discord messaging platform adapter (requires token from Discord Developer Portal)."""
 
     name = "discord"
 

@@ -5,13 +5,7 @@ from pathlib import Path
 
 
 class PendingVoiceRegistry:
-    """Track voice notes that are still waiting on transcription.
-
-    Each entry is indexed under two keys — ``(chat_id, voice_msg_id)`` and
-    ``(chat_id, status_msg_id)`` — so that a ``/clear`` reply to *either* the
-    original voice message or the "Transcribing…" status message can locate
-    and cancel the pending transcription.
-    """
+    """Track voice notes awaiting transcription, indexed by both voice and status message IDs."""
 
     def __init__(self) -> None:
         self._pending: dict[tuple[str, str], tuple[str, str]] = {}
@@ -27,11 +21,7 @@ class PendingVoiceRegistry:
             self._pending[(chat_id, status_msg_id)] = entry
 
     async def cancel(self, chat_id: str, reply_id: str) -> tuple[str, str] | None:
-        """Remove and return the pending entry for ``reply_id`` (voice or status ID).
-
-        Returns ``None`` if no pending entry is found, indicating the voice note
-        has already been transcribed or was never registered.
-        """
+        """Remove and return the pending entry for reply_id; None if not found."""
         async with self._lock:
             entry = self._pending.pop((chat_id, reply_id), None)
             if entry is None:
@@ -56,11 +46,7 @@ class PendingVoiceRegistry:
 
 
 class VoiceTranscriptionService:
-    """Run configured transcription backends off the asyncio event loop.
-
-    Transcription is CPU/network-bound, so calls are dispatched via
-    :func:`asyncio.to_thread` to avoid blocking the event loop.
-    """
+    """Dispatch transcription to a thread (CPU/network-bound; avoids blocking the event loop)."""
 
     def __init__(
         self,

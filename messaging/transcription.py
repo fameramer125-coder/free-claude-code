@@ -1,9 +1,4 @@
-"""Voice note transcription for messaging platforms.
-
-Supports:
-- Local Whisper (cpu/cuda): Hugging Face transformers pipeline
-- NVIDIA NIM: NVIDIA NIM Whisper/Parakeet
-"""
+"""Voice note transcription for messaging platforms (local Whisper or NVIDIA NIM)."""
 
 from pathlib import Path
 from typing import Any
@@ -92,27 +87,7 @@ def transcribe_audio(
     hf_token: str = "",
     nvidia_nim_api_key: str = "",
 ) -> str:
-    """
-    Transcribe audio file to text.
-
-    Supports:
-    - whisper_device="cpu"/"cuda": local Whisper (requires voice_local extra)
-    - whisper_device="nvidia_nim": NVIDIA NIM Whisper API (requires voice extra)
-
-    Args:
-        file_path: Path to audio file (OGG, MP3, MP4, WAV, M4A supported)
-        mime_type: MIME type of the audio (e.g. "audio/ogg")
-        whisper_model: Model ID or short name (local) or NVIDIA NIM model
-        whisper_device: "cpu" | "cuda" | "nvidia_nim"
-
-    Returns:
-        Transcribed text
-
-    Raises:
-        FileNotFoundError: If file does not exist
-        ValueError: If file too large
-        ImportError: If voice_local extra not installed (for local Whisper)
-    """
+    """Transcribe an audio file using local Whisper (cpu/cuda) or NVIDIA NIM."""
 
     if not file_path.exists():
         raise FileNotFoundError(f"Audio file not found: {file_path}")
@@ -160,5 +135,5 @@ def _transcribe_local(
     if isinstance(text, list):
         text = " ".join(text) if text else ""
     result_text = text.strip()
-    logger.debug(f"Local transcription: {len(result_text)} chars")
+    logger.debug("Local transcription: {} chars", len(result_text))
     return result_text or "(no speech detected)"

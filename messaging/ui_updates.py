@@ -11,12 +11,7 @@ from .transcript import RenderCtx, TranscriptBuffer
 
 
 class ThrottledTranscriptEditor:
-    """Rate-limited in-place edits of a platform status message driven by transcript growth.
-
-    Calls to :meth:`update` are throttled to at most once per second unless
-    ``force=True`` is set.  The ``_last_displayed_text`` guard prevents
-    redundant API calls when the rendered output hasn't changed.
-    """
+    """Rate-limited in-place edits of a platform message (at most once/s unless forced)."""
 
     def __init__(
         self,

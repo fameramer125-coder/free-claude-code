@@ -40,10 +40,7 @@ def _clone_strip_extra_body(
     body: dict[str, Any],
     strip: Callable[[dict[str, Any]], bool],
 ) -> dict[str, Any] | None:
-    """Deep-clone ``body`` and remove fields via ``strip`` on ``extra_body`` only.
-
-    Returns ``None`` when there is no ``extra_body`` dict or ``strip`` reports no change.
-    """
+    """Deep-clone body and apply strip to extra_body; returns None if nothing changed."""
     cloned_body = deepcopy(body)
     extra_body = cloned_body.get("extra_body")
     if not isinstance(extra_body, dict):
@@ -151,12 +148,7 @@ def _sanitize_nim_tool_schemas(body: dict[str, Any]) -> None:
 def _set_extra(
     extra_body: dict[str, Any], key: str, value: Any, ignore_value: Any = None
 ) -> None:
-    """Set ``key`` in ``extra_body`` unless it is already present, None, or equals ``ignore_value``.
-
-    ``ignore_value`` prevents setting NIM defaults that are already at their no-op value
-    (e.g. ``top_k=-1`` means disabled, ``min_p=0.0`` means off) — sending them
-    would be redundant noise in the request body.
-    """
+    """Set key in extra_body unless already present, None, or equal to the no-op ignore_value."""
     if key in extra_body:
         return
     if value is None:

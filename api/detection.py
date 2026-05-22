@@ -1,8 +1,4 @@
-"""Request detection utilities for API optimizations.
-
-Detects quota checks, title generation, prefix detection, suggestion mode,
-and filepath extraction requests to enable fast-path responses.
-"""
+"""Request detection utilities for API fast-path responses."""
 
 from core.anthropic import extract_text_from_content
 
@@ -10,11 +6,7 @@ from .models.anthropic import MessagesRequest
 
 
 def is_quota_check_request(request_data: MessagesRequest) -> bool:
-    """Check if this is a quota probe request.
-
-    Quota checks are typically simple requests with max_tokens=1
-    and a single message containing the word "quota".
-    """
+    """Return True for quota probe requests (max_tokens=1, single message containing 'quota')."""
     if (
         request_data.max_tokens == 1
         and len(request_data.messages) == 1
@@ -27,14 +19,7 @@ def is_quota_check_request(request_data: MessagesRequest) -> bool:
 
 
 def is_title_generation_request(request_data: MessagesRequest) -> bool:
-    """Check if this is a conversation title generation request.
-
-    Title generation requests are detected by a system prompt containing
-    title extraction instructions, no tools, and a single user message.
-
-    Matches Claude Code session title prompts (sentence-case title, JSON
-    \"title\" field, etc.).
-    """
+    """Return True for conversation title generation requests (system contains title instructions)."""
     if not request_data.system or request_data.tools:
         return False
     system_text = extract_text_from_content(request_data.system).lower()
@@ -48,11 +33,7 @@ def is_title_generation_request(request_data: MessagesRequest) -> bool:
 
 
 def is_prefix_detection_request(request_data: MessagesRequest) -> tuple[bool, str]:
-    """Check if this is a fast prefix detection request.
-
-    Claude Code sends a ``<policy_spec>`` block plus a ``Command:`` line when
-    asking the server to classify a shell command's leading token.
-    """
+    """Return (True, command) when the request is a shell command prefix classification."""
     if len(request_data.messages) != 1 or request_data.messages[0].role != "user":
         return False, ""
 
@@ -66,11 +47,7 @@ def is_prefix_detection_request(request_data: MessagesRequest) -> tuple[bool, st
 
 
 def is_suggestion_mode_request(request_data: MessagesRequest) -> bool:
-    """Check if this is a suggestion mode request.
-
-    Suggestion mode requests contain "[SUGGESTION MODE:" in the user's message,
-    used for auto-suggesting what the user might type next.
-    """
+    """Return True when the user message contains [SUGGESTION MODE: (auto-suggestion request)."""
     for msg in request_data.messages:
         if msg.role == "user":
             text = extract_text_from_content(msg.content)
@@ -82,13 +59,7 @@ def is_suggestion_mode_request(request_data: MessagesRequest) -> bool:
 def is_filepath_extraction_request(
     request_data: MessagesRequest,
 ) -> tuple[bool, str]:
-    """Check if this is a filepath extraction request.
-
-    Claude Code sends a single user message with ``Command:`` and ``Output:``
-    sections when it wants the server to extract file paths read by a shell
-    command.  The filepath hint may appear in the user content or in the system
-    block, depending on the Claude Code version.
-    """
+    """Return (True, command) when the request asks to extract file paths from a shell command."""
     if len(request_data.messages) != 1 or request_data.messages[0].role != "user":
         return False, ""
     if request_data.tools:

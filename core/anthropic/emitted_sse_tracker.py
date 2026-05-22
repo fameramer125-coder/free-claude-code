@@ -10,14 +10,7 @@ from core.anthropic.stream_contracts import SSEEvent, event_index, parse_sse_lin
 
 
 class EmittedNativeSseTracker:
-    """Parse emitted SSE frames so mid-stream errors can close dangling blocks.
-
-    Fed incrementally with :meth:`feed`, the tracker maintains a stack of
-    open content block indices.  On error, :meth:`iter_midstream_error_tail`
-    emits ``content_block_stop`` events for every open block before appending
-    an error text block and the ``message_delta``/``message_stop`` tail, so
-    the client always receives a well-formed Anthropic-format stream.
-    """
+    """Track open content blocks so mid-stream errors can emit well-formed close events."""
 
     def __init__(self) -> None:
         self._buf = ""

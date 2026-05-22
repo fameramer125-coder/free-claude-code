@@ -13,13 +13,7 @@ from .models.anthropic import MessagesRequest, TokenCountRequest
 
 @dataclass(frozen=True, slots=True)
 class ResolvedModel:
-    """Routing result for a single model name lookup.
-
-    ``provider_model`` is the bare model name sent in the upstream API request
-    (e.g. ``"meta/llama-3.1-405b-instruct"``).  ``provider_model_ref`` is the
-    full ``provider/model`` string (or original gateway model ID) used for
-    display and model-list lookups.
-    """
+    """Routing result mapping a Claude model name to a provider/model pair."""
 
     original_model: str
     provider_id: str
@@ -47,17 +41,7 @@ class ModelRouter:
         self._settings = settings
 
     def resolve(self, claude_model_name: str) -> ResolvedModel:
-        """Resolve a Claude model name to a provider/model pair.
-
-        Two paths are tried in order:
-
-        1. **Direct** — the name is either a gateway model ID (base64-encoded
-           provider+model+flags) or a raw ``provider_id/model`` prefix.  Thinking
-           is taken from the embedded flag when present; otherwise from settings.
-        2. **Mapped** — the name is a Claude tier alias (e.g. ``claude-opus-4-…``)
-           looked up via :meth:`~config.settings.Settings.resolve_model`, which
-           returns the configured ``provider/model`` ref for that tier.
-        """
+        """Resolve a Claude model name via gateway ID, raw provider prefix, or tier alias."""
         (
             direct_provider_id,
             direct_provider_model,
@@ -103,20 +87,7 @@ class ModelRouter:
     def _direct_provider_model(
         self, model_name: str
     ) -> tuple[str | None, str | None, bool | None]:
-        """Try to extract a provider/model pair directly from ``model_name``.
-
-        Returns ``(provider_id, provider_model, force_thinking_enabled)``.
-        All three are ``None`` when the name is not a direct reference (caller
-        should fall through to settings-based mapping).
-
-        Two sub-paths:
-
-        - **Gateway ID**: base64-encoded blob decoded by
-          :func:`~api.gateway_model_ids.decode_gateway_model_id`; may carry an
-          explicit thinking flag.
-        - **Raw prefix**: ``"provider_id/model_name"`` — thinking flag is absent
-          (``None``), so the caller falls back to settings.
-        """
+        """Extract (provider_id, provider_model, force_thinking) from a gateway ID or raw prefix."""
         decoded = decode_gateway_model_id(model_name)
         if decoded is not None:
             if decoded.provider_id not in SUPPORTED_PROVIDER_IDS:
@@ -139,11 +110,7 @@ class ModelRouter:
     def resolve_messages_request(
         self, request: MessagesRequest
     ) -> RoutedMessagesRequest:
-        """Resolve routing and return a deep-copied request with ``model`` replaced.
-
-        The returned ``RoutedMessagesRequest.request.model`` is the upstream model
-        name (``resolved.provider_model``), not the original Claude tier alias.
-        """
+        """Resolve routing and return a deep-copied request with model set to the provider model."""
         resolved = self.resolve(request.model)
         routed = request.model_copy(deep=True)
         routed.model = resolved.provider_model
@@ -152,10 +119,7 @@ class ModelRouter:
     def resolve_token_count_request(
         self, request: TokenCountRequest
     ) -> RoutedTokenCountRequest:
-        """Resolve routing and return a deep-copied request with ``model`` replaced.
-
-        Mirrors :meth:`resolve_messages_request` for the token-count path.
-        """
+        """Resolve routing and return a deep-copied request with model set to the provider model."""
         resolved = self.resolve(request.model)
         routed = request.model_copy(
             update={"model": resolved.provider_model}, deep=True

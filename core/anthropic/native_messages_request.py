@@ -1,7 +1,4 @@
-"""Native Anthropic Messages request body construction (JSON-ready dicts).
-
-Provider adapters supply policy via parameters (defaults, OpenRouter post-steps).
-"""
+"""Native Anthropic Messages request body construction (JSON-ready dicts)."""
 
 from collections.abc import Sequence
 from typing import Any
@@ -115,14 +112,7 @@ def dump_raw_messages_request(request_data: Any) -> dict[str, Any]:
 def sanitize_native_messages_thinking_policy(
     messages: Any, *, thinking_enabled: bool
 ) -> Any:
-    """Filter assistant message thinking blocks for upstream native Anthropic JSON.
-
-    When ``thinking_enabled`` is false, remove ``thinking`` and ``redacted_thinking``
-    history so disabled policy is not undermined by prior turns.
-
-    When true, keep ``redacted_thinking`` and signed ``thinking``; remove only
-    unsigned plain ``thinking`` blocks (not replayable).
-    """
+    """Filter assistant message thinking blocks per policy for upstream native Anthropic JSON."""
     if not isinstance(messages, list):
         return messages
 

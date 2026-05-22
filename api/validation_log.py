@@ -6,17 +6,7 @@ from typing import Any
 def summarize_request_validation_body(
     body: Any,
 ) -> tuple[list[dict[str, Any]], list[str]]:
-    """Summarise message shapes and tool names for 422 debug logs.
-
-    Collects only structural metadata — roles, content kinds, block type tags,
-    dict key names, string lengths — never raw content values.  Safe to log
-    without leaking user input.
-
-    Block and key lists are capped (12 blocks, 5 blocks x 12 keys) to prevent
-    log flooding on pathologically large request bodies.
-
-    Returns ``(message_summary, tool_names)``.
-    """
+    """Return (message_summary, tool_names) with structural metadata only — no raw content."""
     messages = body.get("messages") if isinstance(body, dict) else None
     message_summary: list[dict[str, Any]] = []
     if isinstance(messages, list):

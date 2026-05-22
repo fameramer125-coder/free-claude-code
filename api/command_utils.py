@@ -23,14 +23,7 @@ def _strip_env_assignments(parts: list[str]) -> list[str]:
 
 
 def extract_command_prefix(command: str) -> str:
-    """Extract the leading command name (or two-word subcommand) from a shell string.
-
-    Returns ``"command_injection_detected"`` for backtick or ``$(...)`` patterns.
-    Returns ``"none"`` when the string is empty or consists only of env assignments.
-    For commands in the two-word set (``git``, ``npm``, etc.) the subcommand is
-    appended when present (e.g. ``"git commit"``).
-    Falls back to plain ``str.split()`` when ``shlex.split`` raises on unmatched quotes.
-    """
+    """Extract the leading command name (or two-word subcommand) from a shell string."""
     if "`" in command or "$(" in command:
         return "command_injection_detected"
 
@@ -84,14 +77,7 @@ def extract_command_prefix(command: str) -> str:
 
 
 def extract_filepaths_from_command(command: str) -> str:
-    """Return file paths read by ``command`` as ``<filepaths>…</filepaths>`` XML.
-
-    Listing commands (``ls``, ``find``, etc.) return an empty tag — they name files
-    without reading them.  Reading commands (``cat``, ``head``, etc.) return the
-    non-flag positional args.  ``grep`` is handled specially: the first positional
-    arg is the pattern (skipped unless ``-e``/``-f`` was used), the rest are paths.
-    All other commands return an empty tag.
-    """
+    """Return file paths read by command as <filepaths>…</filepaths> XML."""
     listing_commands = {
         "ls",
         "dir",

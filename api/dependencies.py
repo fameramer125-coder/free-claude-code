@@ -34,16 +34,7 @@ def resolve_provider(
     app: Starlette | None,
     settings: Settings,
 ) -> BaseProvider:
-    """Resolve a provider using the app-scoped registry when ``app`` is set.
-
-    When ``app`` is not ``None``, the app-owned :attr:`app.state.provider_registry`
-    must exist (installed by :class:`~api.runtime.AppRuntime` during startup).
-    Callers that construct a bare ``FastAPI`` without lifespan must set
-    ``app.state.provider_registry`` explicitly.
-
-    When ``app`` is ``None`` (no HTTP context), uses the process-level
-    :data:`_providers` cache only.
-    """
+    """Resolve a provider via the app-scoped registry (if app is set) or the process cache."""
     if app is not None:
         reg = getattr(app.state, "provider_registry", None)
         if reg is None:
@@ -58,12 +49,7 @@ def resolve_provider(
 def _resolve_with_registry(
     registry: ProviderRegistry, provider_type: str, settings: Settings
 ) -> BaseProvider:
-    """Resolve a provider through a concrete registry, with error mapping.
-
-    Maps :class:`~providers.exceptions.AuthenticationError` to HTTP 503 — not
-    401 — because a missing upstream API key is a server configuration failure,
-    not a client authentication failure. Logs first-time provider initialisation.
-    """
+    """Resolve a provider through a concrete registry with error mapping."""
     should_log_init = not registry.is_cached(provider_type)
     try:
         provider = registry.get(provider_type, settings)
@@ -85,24 +71,14 @@ def _resolve_with_registry(
 
 
 def get_provider_for_type(provider_type: str) -> BaseProvider:
-    """Get or create a provider in the process-level cache (no ``app``/Request).
-
-    HTTP route handlers should call :func:`resolve_provider` with the active
-    :attr:`request.app` (via :class:`~api.runtime.AppRuntime`) instead of this
-    process-wide cache.
-    """
+    """Get or create a provider in the process-level cache (no app/Request context)."""
     return resolve_provider(provider_type, app=None, settings=get_settings())
 
 
 def require_api_key(
     request: Request, settings: Settings = Depends(get_settings)
 ) -> None:
-    """Require a server API key (Anthropic-style).
-
-    Checks ``x-api-key``, ``authorization`` (Bearer), and ``anthropic-auth-token``
-    headers against ``Settings.anthropic_auth_token``. If ``ANTHROPIC_AUTH_TOKEN``
-    is empty, this is a no-op and all requests are allowed through.
-    """
+    """Validate the server API key from request headers; no-op if ANTHROPIC_AUTH_TOKEN is unset."""
     anthropic_auth_token = settings.anthropic_auth_token
     if not anthropic_auth_token:
         # No API key configured -> allow
@@ -134,22 +110,12 @@ def require_api_key(
 
 
 def get_provider() -> BaseProvider:
-    """Get or create the default provider (``MODEL`` / ``provider_type``).
-
-    Process-cache helper for scripts, unit tests, and non-FastAPI callers. HTTP
-    handlers must use :func:`resolve_provider` with :attr:`request.app` so the
-    app-scoped :class:`~providers.registry.ProviderRegistry` is used.
-    """
+    """Get or create the default provider from settings (process cache, no HTTP context)."""
     return get_provider_for_type(get_settings().provider_type)
 
 
 async def cleanup_provider():
-    """Release all process-level provider resources (shutdown and test teardown).
-
-    Passes the module-level ``_providers`` dict to a temporary registry so
-    ``ProviderRegistry.cleanup()`` drains and clears it in-place, then rebinds
-    ``_providers`` to a fresh empty dict so the name is safe to reuse.
-    """
+    """Release all process-level provider resources (for shutdown and test teardown)."""
     global _providers
     await ProviderRegistry(_providers).cleanup()
     _providers = {}

@@ -1,9 +1,4 @@
-"""Providers package - implement your own provider by extending BaseProvider.
-
-Concrete adapters (e.g. ``NvidiaNimProvider``) live in subpackages; import them
-from ``providers.nvidia_nim`` etc. to avoid loading every adapter when the
-``providers`` package is imported.
-"""
+"""Providers package: BaseProvider and shared exceptions for all backend adapters."""
 
 from .base import BaseProvider, ProviderConfig
 from .exceptions import (

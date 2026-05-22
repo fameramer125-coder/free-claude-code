@@ -7,11 +7,7 @@ from .models import IncomingMessage
 
 
 def parse_command_base(text: str | None) -> str:
-    """Return the slash command without a trailing bot-mention suffix.
-
-    E.g. ``"/stop@mybot"`` → ``"/stop"``, ``"/clear"`` → ``"/clear"``,
-    ``""`` → ``""``.
-    """
+    """Return the slash command without a trailing bot-mention (e.g. '/stop@mybot' → '/stop')."""
     parts = (text or "").strip().split()
     cmd = parts[0] if parts else ""
     return cmd.split("@", 1)[0] if cmd else ""

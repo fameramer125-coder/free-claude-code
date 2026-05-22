@@ -63,12 +63,7 @@ class CLISession:
         *,
         max_bytes: int = _MAX_STDERR_CAPTURE_BYTES,
     ) -> bytes:
-        """Read stderr concurrently with stdout to avoid subprocess pipe deadlocks.
-
-        Retains at most ``max_bytes`` for logging; any excess is discarded, but
-        the pipe is read until EOF so a noisy child cannot fill the buffer and
-        block forever.
-        """
+        """Read stderr to EOF, keeping at most ``max_bytes``, to prevent pipe deadlocks."""
         if not process.stderr:
             return b""
         parts: list[bytes] = []
@@ -93,16 +88,7 @@ class CLISession:
     async def start_task(
         self, prompt: str, session_id: str | None = None, fork_session: bool = False
     ) -> AsyncGenerator[dict]:
-        """
-        Start a new task or continue an existing session.
-
-        Args:
-            prompt: The user's message/prompt
-            session_id: Optional session ID to resume
-
-        Yields:
-            Event dictionaries from the CLI
-        """
+        """Start a new session or resume an existing one, yielding CLI event dicts."""
         async with self._cli_lock:
             self._is_busy = True
             env = os.environ.copy()
@@ -136,7 +122,7 @@ class CLISession:
                     "--dangerously-skip-permissions",
                     "--verbose",
                 ]
-                logger.info(f"Resuming Claude session {session_id}")
+                logger.info("Resuming Claude session {}", session_id)
             else:
                 cmd = [
                     self.claude_bin,
@@ -242,11 +228,14 @@ class CLISession:
 
                 return_code = await self.process.wait()
                 logger.info(
-                    f"Claude CLI exited with code {return_code}, stderr_present={bool(stderr_text)}"
+                    "Claude CLI exited with code {}, stderr_present={}",
+                    return_code,
+                    bool(stderr_text),
                 )
                 if return_code != 0 and not stderr_text:
                     logger.warning(
-                        f"CLI_SESSION: Process exited with code {return_code} but no stderr captured"
+                        "CLI_SESSION: Process exited with code {} but no stderr captured",
+                        return_code,
                     )
                 yield {
                     "type": "exit",
@@ -268,7 +257,7 @@ class CLISession:
                 extracted_id = self._extract_session_id(event)
                 if extracted_id:
                     self.current_session_id = extracted_id
-                    logger.info(f"Extracted session ID: {extracted_id}")
+                    logger.info("Extracted session ID: {}", extracted_id)
                     yield {"type": "session_info", "session_id": extracted_id}
 
             yield event
@@ -308,7 +297,7 @@ class CLISession:
         """Stop the CLI process."""
         if self.process and self.process.returncode is None:
             try:
-                logger.info(f"Stopping Claude CLI process {self.process.pid}")
+                logger.info("Stopping Claude CLI process {}", self.process.pid)
                 self.process.terminate()
                 try:
                     await asyncio.wait_for(self.process.wait(), timeout=5.0)

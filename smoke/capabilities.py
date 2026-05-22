@@ -1,10 +1,4 @@
-"""Hierarchical public capability map.
-
-This module is the architectural companion to ``smoke.features``.  The feature
-inventory says which public features must be covered; this map records the
-subfeature contracts, owning module boundary, and coverage owners that protect
-them while the internals are refactored.
-"""
+"""Hierarchical public capability map: subfeature contracts, module boundaries, and coverage owners."""
 
 from dataclasses import dataclass
 

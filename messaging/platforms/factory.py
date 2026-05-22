@@ -1,10 +1,4 @@
-"""Messaging platform factory.
-
-Creates the appropriate messaging platform adapter based on configuration.
-To add a new platform (e.g. Discord, Slack):
-1. Create a new class implementing MessagingPlatform in messaging/platforms/
-2. Add a case to create_messaging_platform() below
-"""
+"""Messaging platform factory: creates the appropriate adapter from configuration."""
 
 from dataclasses import dataclass
 
@@ -36,15 +30,7 @@ def create_messaging_platform(
     platform_type: str,
     options: MessagingPlatformOptions | None = None,
 ) -> MessagingPlatform | None:
-    """Create a messaging platform instance based on type.
-
-    Args:
-        platform_type: Platform identifier (``telegram``, ``discord``, ``none``).
-        options: Token, allowlist, and voice / transcription settings.
-
-    Returns:
-        Configured :class:`MessagingPlatform` instance, or None if not configured.
-    """
+    """Create a messaging platform adapter from type (telegram/discord/none) and options."""
     opts = options or MessagingPlatformOptions()
     if platform_type == "none":
         logger.info("Messaging platform disabled by configuration")
@@ -95,7 +81,7 @@ def create_messaging_platform(
         )
 
     logger.warning(
-        f"Unknown messaging platform: '{platform_type}'. "
-        "Supported: 'none', 'telegram', 'discord'"
+        "Unknown messaging platform: '{}'. Supported: 'none', 'telegram', 'discord'",
+        platform_type,
     )
     return None

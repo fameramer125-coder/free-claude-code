@@ -1,8 +1,4 @@
-"""Telegram MarkdownV2 utilities.
-
-Renders common Markdown into Telegram MarkdownV2 format.
-Used by the message handler and Telegram platform adapter.
-"""
+"""Telegram MarkdownV2 utilities for rendering Markdown to Telegram format."""
 
 from markdown_it import MarkdownIt
 

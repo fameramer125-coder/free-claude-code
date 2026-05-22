@@ -1,10 +1,4 @@
-"""
-Claude Message Handler
-
-Platform-agnostic Claude interaction logic.
-Handles the core workflow of processing user messages via Claude CLI.
-Uses tree-based queuing for message ordering.
-"""
+"""Platform-agnostic Claude message handler using tree-based queuing."""
 
 import asyncio
 
@@ -36,15 +30,7 @@ from .ui_updates import ThrottledTranscriptEditor
 
 
 class ClaudeMessageHandler:
-    """
-    Platform-agnostic handler for Claude interactions.
-
-    Uses a tree-based message queue where:
-    - New messages create a tree root
-    - Replies become children of the message being replied to
-    - Each node has state: PENDING, IN_PROGRESS, COMPLETED, ERROR
-    - Per-tree queue ensures ordered processing
-    """
+    """Routes incoming messages through a tree queue; new messages are roots, replies are children."""
 
     def __init__(
         self,
@@ -96,12 +82,7 @@ class ClaudeMessageHandler:
         self._tree_queue.set_node_started_callback(self.mark_node_processing)
 
     async def handle_message(self, incoming: IncomingMessage) -> None:
-        """
-        Main entry point for handling an incoming message.
-
-        Determines if this is a new conversation or reply,
-        creates/extends the message tree, and queues for processing.
-        """
+        """Route an incoming message: create a new tree or extend an existing one."""
         raw = incoming.text or ""
         if self._log_raw_messaging_content:
             text_preview = raw[:80]
@@ -168,10 +149,11 @@ class ClaudeMessageHandler:
                 # resolve_parent_node_id handles replies to status messages (not just node messages)
                 parent_node_id = self.tree_queue.resolve_parent_node_id(reply_id)
                 if parent_node_id:
-                    logger.info(f"Found tree for reply, parent node: {parent_node_id}")
+                    logger.info("Found tree for reply, parent node: {}", parent_node_id)
                 else:
                     logger.warning(
-                        f"Reply to {incoming.reply_to_message_id} found tree but no valid parent node"
+                        "Reply to {} found tree but no valid parent node",
+                        incoming.reply_to_message_id,
                     )
                     tree = None  # treat as new conversation
 
@@ -381,7 +363,7 @@ class ClaudeMessageHandler:
                     )
                 return
 
-            logger.info(f"HANDLER: Starting CLI task processing for node {node_id}")
+            logger.info("HANDLER: Starting CLI task processing for node {}", node_id)
             event_count = 0
             async for event_data in cli_session.start_task(
                 incoming.text,
@@ -390,12 +372,12 @@ class ClaudeMessageHandler:
             ):
                 if not isinstance(event_data, dict):
                     logger.warning(
-                        f"HANDLER: Non-dict event received: {type(event_data)}"
+                        "HANDLER: Non-dict event received: {}", type(event_data)
                     )
                     continue
                 event_count += 1
                 if event_count % 10 == 0:
-                    logger.debug(f"HANDLER: Processed {event_count} events so far")
+                    logger.debug("HANDLER: Processed {} events so far", event_count)
 
                 (
                     captured_session_id,
@@ -415,7 +397,7 @@ class ClaudeMessageHandler:
                 parsed_list = parse_cli_event(
                     event_data, log_raw_cli=self._log_raw_cli_diagnostics
                 )
-                logger.debug(f"HANDLER: Parsed {len(parsed_list)} events from CLI")
+                logger.debug("HANDLER: Parsed {} events from CLI", len(parsed_list))
 
                 for parsed in parsed_list:
                     (
@@ -437,7 +419,7 @@ class ClaudeMessageHandler:
                     )
 
         except asyncio.CancelledError:
-            logger.warning(f"HANDLER: Task cancelled for node {node_id}")
+            logger.warning("HANDLER: Task cancelled for node {}", node_id)
             cancel_reason = None
             if isinstance(node.context, dict):
                 cancel_reason = node.context.get("cancel_reason")
@@ -469,7 +451,7 @@ class ClaudeMessageHandler:
                     node_id, error_msg, "Parent task failed"
                 )
         finally:
-            logger.info(f"HANDLER: _process_node completed for node {node_id}")
+            logger.info("HANDLER: _process_node completed for node {}", node_id)
             # Session IDs are persisted in the tree and can be resumed later by ID;
             # the CLISession subprocess slot can be freed immediately on completion.
             try:
@@ -526,18 +508,10 @@ class ClaudeMessageHandler:
         return self.format_status("⏳", "Launching new Claude CLI instance...")
 
     async def stop_all_tasks(self) -> int:
-        """Stop all pending and in-progress tasks.
-
-        Operation order is load-bearing:
-
-        1. Cancel queue tasks first (acquires internal tree locks) so no new
-           work starts while sessions are being torn down.
-        2. Stop CLI sessions (kills subprocesses).
-        3. Update platform status messages and persist tree state.
-        """
+        """Cancel queue then stop CLI sessions (order is load-bearing); returns cancelled count."""
         logger.info("Cancelling tree queue tasks...")
         cancelled_nodes = await self.tree_queue.cancel_all()
-        logger.info(f"Cancelled {len(cancelled_nodes)} nodes")
+        logger.info("Cancelled {} nodes", len(cancelled_nodes))
 
         logger.info("Stopping all CLI sessions...")
         await self.cli_manager.stop_all()
@@ -547,11 +521,7 @@ class ClaudeMessageHandler:
         return len(cancelled_nodes)
 
     async def stop_task(self, node_id: str) -> int:
-        """
-        Stop a single queued or in-progress task node.
-
-        Used when the user replies "/stop" to a specific status/user message.
-        """
+        """Stop a single queued or in-progress task node (called when user sends /stop)."""
         tree = self.tree_queue.get_tree_for_node(node_id)
         if tree:
             node = tree.get_node(node_id)

@@ -1,9 +1,4 @@
-"""
-Global Rate Limiter for Messaging Platforms.
-
-Centralizes outgoing message requests and ensures compliance with rate limits
-using a strict sliding window algorithm and a task queue.
-"""
+"""Global rate limiter for messaging platforms using a sliding window and dedup task queue."""
 
 import asyncio
 from collections import deque
@@ -19,12 +14,7 @@ from .safe_diagnostics import format_exception_for_log
 
 
 class MessagingRateLimiter:
-    """
-    A thread-safe global rate limiter for messaging.
-
-    Uses a custom queue with task compaction (deduplication) to ensure
-    only the latest version of a message update is processed.
-    """
+    """Global rate limiter with dedup task compaction (only latest update per key is processed)."""
 
     _instance: MessagingRateLimiter | None = None
     _lock = asyncio.Lock()
@@ -39,11 +29,7 @@ class MessagingRateLimiter:
         rate_limit: int = 1,
         rate_window: float = 1.0,
     ) -> MessagingRateLimiter:
-        """Get the singleton instance of the limiter.
-
-        ``rate_limit`` and ``rate_window`` apply only when the singleton is first
-        created. Call :meth:`shutdown_instance` before changing parameters.
-        """
+        """Return the singleton limiter, creating it on first call with the given parameters."""
         async with cls._lock:
             if cls._instance is None:
                 cls._instance = cls(rate_limit=rate_limit, rate_window=rate_window)
@@ -70,7 +56,9 @@ class MessagingRateLimiter:
         self._paused_until = 0
 
         logger.info(
-            f"MessagingRateLimiter initialized ({rate_limit} req / {rate_window}s with Task Compaction)"
+            "MessagingRateLimiter initialized ({} req / {}s with Task Compaction)",
+            rate_limit,
+            rate_window,
         )
 
     def _start_worker(self) -> None:
@@ -103,7 +91,7 @@ class MessagingRateLimiter:
                 if self._paused_until > now:
                     wait_time = self._paused_until - now
                     logger.warning(
-                        f"Limiter worker paused, waiting {wait_time:.1f}s more..."
+                        "Limiter worker paused, waiting {:.1f}s more...", wait_time
                     )
                     await asyncio.sleep(wait_time)
 
@@ -135,7 +123,7 @@ class MessagingRateLimiter:
                                 pass
 
                             logger.error(
-                                f"FloodWait detected! Pausing worker for {seconds}s"
+                                "FloodWait detected! Pausing worker for {}s", seconds
                             )
                             wait_secs = (
                                 float(seconds)
@@ -222,7 +210,9 @@ class MessagingRateLimiter:
                 old_futures.extend(futures)
                 self._queue_map[dedup_key] = (func, old_futures)
                 logger.debug(
-                    f"Compacted task for key: {dedup_key} (now {len(old_futures)} futures)"
+                    "Compacted task for key: {} (now {} futures)",
+                    dedup_key,
+                    len(old_futures),
                 )
             else:
                 self._queue_map[dedup_key] = (func, futures)
@@ -235,10 +225,7 @@ class MessagingRateLimiter:
     async def enqueue(
         self, func: Callable[[], Awaitable[Any]], dedup_key: str | None = None
     ) -> Any:
-        """
-        Enqueue a messaging task and return its future result.
-        If dedup_key is provided, subsequent tasks with the same key will replace this one.
-        """
+        """Enqueue a messaging task and return its result; same dedup_key replaces earlier tasks."""
         if dedup_key is None:
             # Unique key to avoid deduplication
             dedup_key = f"task_{id(func)}_{asyncio.get_event_loop().time()}"

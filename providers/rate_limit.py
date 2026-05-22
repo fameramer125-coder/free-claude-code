@@ -17,18 +17,7 @@ T = TypeVar("T")
 
 
 class GlobalRateLimiter:
-    """
-    Global singleton rate limiter that blocks all requests
-    when a rate limit error is encountered (reactive) and
-    throttles requests (proactive) using a strict rolling window.
-
-    Optionally enforces a max_concurrency cap: at most N provider streams
-    may be open simultaneously, independent of the sliding window.
-
-    Proactive limits - throttles requests to stay within API limits.
-    Reactive limits - pauses all requests when a 429 is hit.
-    Concurrency limit - caps simultaneously open streams.
-    """
+    """Singleton rate limiter: proactive sliding-window throttle, reactive 429 pause, and concurrency cap."""
 
     _instance: ClassVar[GlobalRateLimiter | None] = None
     _scoped_instances: ClassVar[dict[str, GlobalRateLimiter]] = {}
@@ -74,13 +63,7 @@ class GlobalRateLimiter:
         rate_window: float | None = None,
         max_concurrency: int = 5,
     ) -> GlobalRateLimiter:
-        """Get or create the singleton instance.
-
-        Args:
-            rate_limit: Requests per window (only used on first creation)
-            rate_window: Window in seconds (only used on first creation)
-            max_concurrency: Max simultaneous open streams (only used on first creation)
-        """
+        """Return the process-wide singleton, creating it on first call."""
         if cls._instance is None:
             cls._instance = cls(
                 rate_limit=rate_limit or 40,
@@ -126,12 +109,7 @@ class GlobalRateLimiter:
         cls._scoped_instances = {}
 
     async def wait_if_blocked(self) -> bool:
-        """
-        Wait if currently rate limited or throttle to meet quota.
-
-        Returns:
-            True if was reactively blocked and waited, False otherwise.
-        """
+        """Wait for reactive block and proactive slot; returns True if reactive wait occurred."""
         # 1. Reactive check: Wait if someone hit a 429
         waited_reactively = False
         now = time.monotonic()
@@ -149,21 +127,11 @@ class GlobalRateLimiter:
         return waited_reactively
 
     async def _acquire_proactive_slot(self) -> None:
-        """
-        Acquire a proactive slot enforcing a strict rolling window.
-
-        Guarantees: at most `self._rate_limit` acquisitions in any interval of length
-        `self._rate_window` (seconds).
-        """
+        """Acquire a slot from the strict rolling-window limiter."""
         await self._proactive_limiter.acquire()
 
     def set_blocked(self, seconds: float = 60) -> None:
-        """
-        Set global block for specified seconds (reactive).
-
-        Args:
-            seconds: How long to block (default 60s)
-        """
+        """Block all requests for the given number of seconds (reactive 429 response)."""
         self._blocked_until = time.monotonic() + seconds
         logger.warning("Global provider rate limit set for {:.1f}s (reactive)", seconds)
 
@@ -187,10 +155,7 @@ class GlobalRateLimiter:
 
     @asynccontextmanager
     async def concurrency_slot(self) -> AsyncIterator[None]:
-        """Async context manager that holds one concurrency slot for a stream.
-
-        Blocks until a slot is available (controlled by max_concurrency).
-        """
+        """Hold one concurrency slot for the duration of a provider stream."""
         await self._concurrency_sem.acquire()
         try:
             yield
@@ -207,24 +172,7 @@ class GlobalRateLimiter:
         jitter: float = 1.0,
         **kwargs: Any,
     ) -> Any:
-        """Execute an async callable with rate limiting and retry on 429.
-
-        Waits for the proactive limiter before each attempt. On 429, applies
-        exponential backoff with jitter before retrying.
-
-        Args:
-            fn: Async callable to execute.
-            max_retries: Maximum number of retry attempts after the first failure.
-            base_delay: Base delay in seconds for exponential backoff.
-            max_delay: Maximum delay cap in seconds.
-            jitter: Maximum random jitter in seconds added to each delay.
-
-        Returns:
-            The result of the callable.
-
-        Raises:
-            The last exception if all retries are exhausted.
-        """
+        """Execute fn with rate limiting; retries on 429 with exponential backoff."""
         last_exc: Exception | None = None
 
         for attempt in range(1 + max_retries):

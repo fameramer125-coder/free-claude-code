@@ -1,10 +1,4 @@
-"""Loguru-based structured logging configuration.
-
-All logs are written to server.log as JSON lines for full traceability.
-Stdlib logging is intercepted and funneled to loguru.
-Context vars (request_id, node_id, chat_id) from contextualize() are
-included at top level for easy grep/filter.
-"""
+"""Loguru-based structured logging: JSON lines to server.log with stdlib interception."""
 
 import json
 import logging
@@ -36,13 +30,7 @@ def _redact_sensitive_substrings(message: str) -> str:
 
 
 def _serialize_with_context(record) -> str:
-    """Loguru format callback: serialize record as a JSON line.
-
-    Loguru format callables must mutate ``record`` and return a template string
-    whose placeholders are resolved by loguru. We store the serialized JSON in
-    ``record["_json"]`` and return ``"{_json}\\n"`` so loguru writes exactly one
-    JSON line per record.
-    """
+    """Loguru format callback: serialize record as a single JSON line."""
     extra = record["extra"]
     out = {
         "time": str(record["time"]),
@@ -81,14 +69,7 @@ class InterceptHandler(logging.Handler):
 def configure_logging(
     log_file: str, *, force: bool = False, verbose_third_party: bool = False
 ) -> None:
-    """Configure loguru with JSON output to log_file and intercept stdlib logging.
-
-    Idempotent: skips if already configured (e.g. hot reload).
-    Use force=True to reconfigure (e.g. in tests with a different log path).
-
-    When ``verbose_third_party`` is false, noisy HTTP and Telegram loggers are capped
-    at WARNING unless explicitly configured otherwise.
-    """
+    """Configure loguru with JSON file output and stdlib interception; idempotent."""
     global _configured
     if _configured and not force:
         return

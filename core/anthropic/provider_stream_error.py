@@ -16,13 +16,7 @@ def iter_provider_stream_error_sse_events(
     log_raw_sse_events: bool,
     message_id: str | None = None,
 ) -> Iterator[str]:
-    """Yield a well-formed Anthropic SSE error tail.
-
-    Emits ``message_start`` only when ``sent_any_event`` is ``False``
-    (the stream has not yet sent anything to the client).  Always emits a
-    text content block containing ``error_message`` and closes with
-    ``message_delta`` / ``message_stop`` so the client sees a valid stream.
-    """
+    """Yield a well-formed Anthropic SSE error tail with text block and message stop."""
     mid = message_id or f"msg_{uuid.uuid4()}"
     model = getattr(request, "model", "") or ""
     sse = SSEBuilder(

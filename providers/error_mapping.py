@@ -32,12 +32,7 @@ def user_visible_message_for_mapped_provider_error(
 def map_error(
     e: Exception, *, rate_limiter: GlobalRateLimiter | None = None
 ) -> Exception:
-    """Map OpenAI or HTTPX exception to specific ProviderError.
-
-    Streaming transports should pass their scoped limiter (``self._global_rate_limiter``)
-    so reactive 429 handling applies to the correct provider. Tests may omit
-    ``rate_limiter`` to use the process-wide singleton.
-    """
+    """Map an OpenAI or HTTPX exception to a typed ProviderError."""
     message = get_user_facing_error_message(e)
     limiter = rate_limiter or GlobalRateLimiter.get_instance()
 

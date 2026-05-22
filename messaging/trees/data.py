@@ -1,7 +1,4 @@
-"""Tree data structures for message queue.
-
-Contains MessageState, MessageNode, and MessageTree classes.
-"""
+"""Tree data structures for message queue (MessageState, MessageNode, MessageTree)."""
 
 import asyncio
 from collections import deque
@@ -65,14 +62,7 @@ class MessageState(Enum):
 
 @dataclass
 class MessageNode:
-    """
-    A node in the message tree.
-
-    Each node represents a single message and tracks:
-    - Its relationship to parent/children
-    - Its processing state
-    - Claude session information
-    """
+    """A node in the message tree tracking relationships, state, and session info."""
 
     node_id: str  # Unique ID (typically message_id)
     incoming: IncomingMessage  # The original message
@@ -146,22 +136,9 @@ class MessageNode:
 
 
 class MessageTree:
-    """
-    A tree of message nodes with queue functionality.
-
-    Provides:
-    - O(1) node lookup via hashmap
-    - Per-tree message queue
-    - Thread-safe operations via asyncio.Lock
-    """
+    """Message node tree with O(1) lookup, per-tree queue, and asyncio locking."""
 
     def __init__(self, root_node: MessageNode):
-        """
-        Initialize tree with a root node.
-
-        Args:
-            root_node: The root message node
-        """
         self.root_id = root_node.node_id
         self._nodes: dict[str, MessageNode] = {root_node.node_id: root_node}
         self._status_to_node: dict[str, str] = {
@@ -173,7 +150,7 @@ class MessageTree:
         self._current_node_id: str | None = None
         self._current_task: asyncio.Task | None = None
 
-        logger.debug(f"Created MessageTree with root {self.root_id}")
+        logger.debug("Created MessageTree with root {}", self.root_id)
 
     def set_current_task(self, task: asyncio.Task | None) -> None:
         """Set the current processing task. Caller must hold lock."""
@@ -191,18 +168,7 @@ class MessageTree:
         status_message_id: str,
         parent_id: str,
     ) -> MessageNode:
-        """
-        Add a child node to the tree.
-
-        Args:
-            node_id: Unique ID for the new node
-            incoming: The incoming message
-            status_message_id: Bot's status message ID
-            parent_id: Parent node ID
-
-        Returns:
-            The created MessageNode
-        """
+        """Add and return a child MessageNode under parent_id."""
         async with self._lock:
             if parent_id not in self._nodes:
                 raise ValueError(f"Parent node {parent_id} not found in tree")
@@ -219,7 +185,7 @@ class MessageTree:
             self._status_to_node[status_message_id] = node_id
             self._nodes[parent_id].children_ids.append(node_id)
 
-            logger.debug(f"Added node {node_id} as child of {parent_id}")
+            logger.debug("Added node {} as child of {}", node_id, parent_id)
             return node
 
     def get_node(self, node_id: str) -> MessageNode | None:
@@ -245,11 +211,7 @@ class MessageTree:
         return self._nodes.get(node.parent_id)
 
     def get_parent_session_id(self, node_id: str) -> str | None:
-        """
-        Get the parent's session ID for forking.
-
-        Returns None for root nodes.
-        """
+        """Return the parent node's session ID, or None for root nodes."""
         parent = self.get_parent(node_id)
         return parent.session_id if parent else None
 
@@ -264,7 +226,7 @@ class MessageTree:
         async with self._lock:
             node = self._nodes.get(node_id)
             if not node:
-                logger.warning(f"Node {node_id} not found for state update")
+                logger.warning("Node {} not found for state update", node_id)
                 return
 
             node.state = state
@@ -275,39 +237,25 @@ class MessageTree:
             if state in (MessageState.COMPLETED, MessageState.ERROR):
                 node.completed_at = datetime.now(UTC)
 
-            logger.debug(f"Node {node_id} state -> {state.value}")
+            logger.debug("Node {} state -> {}", node_id, state.value)
 
     async def enqueue(self, node_id: str) -> int:
-        """
-        Add a node to the processing queue.
-
-        Returns:
-            Queue position (1-indexed)
-        """
+        """Add node to the processing queue; returns 1-indexed queue position."""
         async with self._lock:
             await self._queue.put(node_id)
             position = self._queue.qsize()
-            logger.debug(f"Enqueued node {node_id}, position {position}")
+            logger.debug("Enqueued node {}, position {}", node_id, position)
             return position
 
     async def dequeue(self) -> str | None:
-        """
-        Get the next node ID from the queue.
-
-        Returns None if queue is empty.
-        """
+        """Return the next node ID from the queue, or None if empty."""
         try:
             return self._queue.get_nowait()
         except asyncio.QueueEmpty:
             return None
 
     async def get_queue_snapshot(self) -> list[str]:
-        """
-        Get a snapshot of the current queue order.
-
-        Returns:
-            List of node IDs in FIFO order.
-        """
+        """Return a snapshot of node IDs in the queue in FIFO order."""
         async with self._lock:
             return self._queue.get_snapshot()
 
@@ -316,12 +264,7 @@ class MessageTree:
         return self._queue.qsize()
 
     def remove_from_queue(self, node_id: str) -> bool:
-        """
-        Remove node_id from the internal queue if present.
-
-        Caller must hold the tree lock (e.g. via with_lock).
-        Returns True if node was removed, False if not in queue.
-        """
+        """Remove node_id from the queue if present; caller must hold tree lock."""
         return self._queue.remove_if_present(node_id)
 
     @asynccontextmanager
@@ -363,10 +306,7 @@ class MessageTree:
     def drain_queue_and_mark_cancelled(
         self, error_message: str = "Cancelled by user"
     ) -> list[MessageNode]:
-        """
-        Drain the queue, mark each node as ERROR, and return affected nodes.
-        Does not acquire lock; caller must ensure no concurrent queue access.
-        """
+        """Drain queue, mark each node ERROR, and return affected nodes (no lock acquired)."""
         nodes: list[MessageNode] = []
         while True:
             try:
@@ -433,12 +373,7 @@ class MessageTree:
         return self._nodes.get(node_id) if node_id else None
 
     def get_descendants(self, node_id: str) -> list[str]:
-        """
-        Get node_id and all descendant IDs (subtree).
-
-        Returns:
-            List of node IDs including the given node.
-        """
+        """Return node_id and all descendant IDs (subtree), including the given node."""
         if node_id not in self._nodes:
             return []
         result: list[str] = []
@@ -452,15 +387,7 @@ class MessageTree:
         return result
 
     def remove_branch(self, branch_root_id: str) -> list[MessageNode]:
-        """
-        Remove a subtree (branch_root and all descendants) from the tree.
-
-        Updates parent's children_ids. Caller must hold lock for consistency.
-        Does not acquire lock internally.
-
-        Returns:
-            List of removed nodes.
-        """
+        """Remove a subtree and return removed nodes; caller must hold lock."""
         if branch_root_id not in self._nodes:
             return []
 
@@ -478,5 +405,5 @@ class MessageTree:
                 c for c in parent.children_ids if c != branch_root_id
             ]
 
-        logger.debug(f"Removed branch {branch_root_id} ({len(removed)} nodes)")
+        logger.debug("Removed branch {} ({} nodes)", branch_root_id, len(removed))
         return removed

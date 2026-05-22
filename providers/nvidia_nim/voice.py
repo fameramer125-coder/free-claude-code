@@ -29,16 +29,7 @@ def transcribe_audio_file(
     *,
     api_key: str,
 ) -> str:
-    """Transcribe audio using NVIDIA NIM / Riva gRPC (offline recognition).
-
-    Args:
-        file_path: Path to encoded audio bytes readable by Riva.
-        model: Hugging Face-style NIM model id (see ``_NIM_ASR_MODEL_MAP``).
-        api_key: NVIDIA API key (Bearer token); must be non-empty.
-
-    Returns:
-        Transcript text, or ``(no speech detected)`` when empty.
-    """
+    """Transcribe audio via NVIDIA NIM / Riva gRPC; returns transcript or '(no speech detected)'."""
     key = (api_key or "").strip()
     if not key:
         raise ValueError(

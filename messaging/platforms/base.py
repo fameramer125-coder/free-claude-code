@@ -25,20 +25,12 @@ class CLISession(Protocol):
 
 @runtime_checkable
 class SessionManagerInterface(Protocol):
-    """
-    Protocol for session managers to avoid tight coupling with cli package.
-
-    Implementations: CLISessionManager
-    """
+    """Protocol for session managers (avoids circular import from cli package)."""
 
     async def get_or_create_session(
         self, session_id: str | None = None
     ) -> tuple[CLISession, str, bool]:
-        """
-        Get an existing session or create a new one.
-
-        Returns: Tuple of (session, session_id, is_new_session)
-        """
+        """Return (session, session_id, is_new_session)."""
         ...
 
     async def register_real_session_id(
@@ -61,11 +53,7 @@ class SessionManagerInterface(Protocol):
 
 
 class MessagingPlatform(ABC):
-    """
-    Base class for all messaging platform adapters.
-
-    Implement this to add support for Telegram, Discord, Slack, etc.
-    """
+    """Base class for messaging platform adapters (Telegram, Discord, etc.)."""
 
     name: str = "base"
 
@@ -88,20 +76,7 @@ class MessagingPlatform(ABC):
         parse_mode: str | None = None,
         message_thread_id: str | None = None,
     ) -> str:
-        """
-        Send a message to a chat.
-
-        Args:
-            chat_id: The chat/channel ID to send to
-            text: Message content
-            reply_to: Optional message ID to reply to
-            parse_mode: Optional formatting mode ("markdown", "html")
-            message_thread_id: Optional thread or topic id for threaded channels
-                (e.g. forum topics); unused on platforms that do not support it.
-
-        Returns:
-            The message ID of the sent message
-        """
+        """Send a message and return its message ID."""
         pass
 
     @abstractmethod
@@ -112,15 +87,7 @@ class MessagingPlatform(ABC):
         text: str,
         parse_mode: str | None = None,
     ) -> None:
-        """
-        Edit an existing message.
-
-        Args:
-            chat_id: The chat/channel ID
-            message_id: The message ID to edit
-            text: New message content
-            parse_mode: Optional formatting mode
-        """
+        """Edit an existing message in place."""
         pass
 
     @abstractmethod
@@ -129,13 +96,7 @@ class MessagingPlatform(ABC):
         chat_id: str,
         message_id: str,
     ) -> None:
-        """
-        Delete a message from a chat.
-
-        Args:
-            chat_id: The chat/channel ID
-            message_id: The message ID to delete
-        """
+        """Delete a message from a chat."""
         pass
 
     @abstractmethod
@@ -148,12 +109,7 @@ class MessagingPlatform(ABC):
         fire_and_forget: bool = True,
         message_thread_id: str | None = None,
     ) -> str | None:
-        """
-        Enqueue a message to be sent.
-
-        If fire_and_forget is True, returns None immediately.
-        Otherwise, waits for the rate limiter and returns message ID.
-        """
+        """Enqueue a message; returns None immediately if fire_and_forget, else waits for message ID."""
         pass
 
     @abstractmethod
@@ -165,12 +121,7 @@ class MessagingPlatform(ABC):
         parse_mode: str | None = None,
         fire_and_forget: bool = True,
     ) -> None:
-        """
-        Enqueue a message edit.
-
-        If fire_and_forget is True, returns immediately.
-        Otherwise, waits for the rate limiter.
-        """
+        """Enqueue a message edit; returns immediately if fire_and_forget."""
         pass
 
     @abstractmethod
@@ -180,12 +131,7 @@ class MessagingPlatform(ABC):
         message_id: str,
         fire_and_forget: bool = True,
     ) -> None:
-        """
-        Enqueue a message deletion.
-
-        If fire_and_forget is True, returns immediately.
-        Otherwise, waits for the rate limiter.
-        """
+        """Enqueue a message deletion; returns immediately if fire_and_forget."""
         pass
 
     async def queue_delete_messages(
@@ -195,10 +141,7 @@ class MessagingPlatform(ABC):
         *,
         fire_and_forget: bool = True,
     ) -> None:
-        """Delete many messages; default loops :meth:`queue_delete_message`.
-
-        Adapters with native bulk delete should override.
-        """
+        """Delete many messages; loops queue_delete_message by default (override for bulk delete)."""
         for mid in message_ids:
             await self.queue_delete_message(
                 chat_id, mid, fire_and_forget=fire_and_forget
@@ -209,14 +152,7 @@ class MessagingPlatform(ABC):
         self,
         handler: Callable[[IncomingMessage], Awaitable[None]],
     ) -> None:
-        """
-        Register a message handler callback.
-
-        The handler will be called for each incoming message.
-
-        Args:
-            handler: Async function that processes incoming messages
-        """
+        """Register the handler called for each incoming message."""
         pass
 
     @abstractmethod

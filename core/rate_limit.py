@@ -6,16 +6,7 @@ from collections import deque
 
 
 class StrictSlidingWindowLimiter:
-    """Strict sliding window limiter.
-
-    Guarantees: at most ``rate_limit`` acquisitions in any interval of length
-    ``rate_window`` (seconds).
-
-    Implemented as an async context manager so call sites can do::
-
-        async with limiter:
-            ...
-    """
+    """Strict sliding window rate limiter; async context manager for at-most-N-per-window guarantee."""
 
     def __init__(self, rate_limit: int, rate_window: float) -> None:
         if rate_limit <= 0:

@@ -91,11 +91,7 @@ class ContentBlockManager:
         state.tool_id = str(tool_id)
 
     def register_tool_name(self, index: int, name: str) -> None:
-        """Record tool name fragments as they arrive from chunked OpenAI streams.
-
-        Names may be split across deltas; later chunks can extend (``ab`` + ``c``)
-        or repeat prefixes, so we merge conservatively.
-        """
+        """Record tool name fragments from chunked streams; merges partial names conservatively."""
         if index not in self.tool_states:
             self.tool_states[index] = ToolCallState(
                 block_index=-1, tool_id="", name=name

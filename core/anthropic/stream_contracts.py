@@ -1,7 +1,4 @@
-"""Neutral SSE parsing and Anthropic stream shape assertions.
-
-Used by default CI contract tests and by opt-in live smoke scenarios.
-"""
+"""Neutral SSE parsing and Anthropic stream shape assertions for CI and smoke tests."""
 
 import json
 from collections.abc import Iterable
@@ -97,12 +94,7 @@ def _append_event(
 def assert_anthropic_stream_contract(
     events: list[SSEEvent], *, allow_error: bool = False
 ) -> None:
-    """Check minimal Anthropic-style SSE invariants: start/stop, block nesting.
-
-    Does *not* assert strict event ordering (e.g. :class:`message_delta` vs
-    content blocks) beyond presence of a final ``message_stop``; stricter
-    ordering can be tested in product or transport-specific suites.
-    """
+    """Assert minimal Anthropic SSE invariants: message_start present, message_stop last."""
     assert events, "stream produced no SSE events"
     event_names = [event.event for event in events]
     assert "message_start" in event_names, event_names

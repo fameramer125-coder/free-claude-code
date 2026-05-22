@@ -344,11 +344,7 @@ class TestStreamingExceptionHandling:
 
     @pytest.mark.asyncio
     async def test_reasoning_only_stream_emits_placeholder_text(self):
-        """When the model streams only ``reasoning_content`` (no ``content``), add text block.
-
-        NIM / some templates may emit no main ``content``; a minimal text block matches
-        the empty-body placeholder and helps clients that expect a text segment.
-        """
+        """Reasoning-only streams get a placeholder text block for clients that expect one."""
         provider = _make_provider_with_thinking_enabled(True)
         request = _make_request()
         chunk1 = _make_chunk(reasoning_content="reasoning only from provider")

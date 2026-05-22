@@ -1,7 +1,4 @@
-"""Stream/SSE contract tests. Strict transcript *ordering* is covered here for
-``SSEBuilder`` output; for transport-integrated ordering, add messaging or API
-integration tests.
-"""
+"""Stream/SSE contract tests for SSEBuilder output ordering."""
 
 from collections.abc import Iterable
 

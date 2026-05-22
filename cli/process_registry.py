@@ -1,9 +1,4 @@
-"""Track and clean up spawned CLI subprocesses.
-
-This is a safety net for cases where the server is interrupted (Ctrl+C) and the
-FastAPI lifespan cleanup doesn't run to completion. We only track processes we
-spawn so we don't accidentally kill unrelated system processes.
-"""
+"""Track and clean up spawned CLI subprocesses (safety net for interrupted shutdowns)."""
 
 import atexit
 import os

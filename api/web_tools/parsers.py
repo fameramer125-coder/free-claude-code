@@ -77,12 +77,7 @@ class HTMLTextParser(HTMLParser):
 
 
 def content_text(content: Any) -> str:
-    """Extract plain text from a message content value.
-
-    Accepts a raw string, a list of content-block dicts (JSON-parsed), or a
-    list of Pydantic model objects (``getattr`` path) — all three shapes appear
-    depending on the call site.
-    """
+    """Extract plain text from a content value (string, dict-list, or Pydantic-model-list)."""
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -104,10 +99,6 @@ def extract_query(text: str) -> str:
 
 
 def extract_url(text: str) -> str:
-    """Return the first ``http(s)://`` URL found in ``text``, or ``text`` itself.
-
-    Trailing ``)``, ``.``, ``,``, ``]`` are stripped — they commonly appear when
-    a URL is embedded in prose or markdown.
-    """
+    """Return the first http(s):// URL in text (trailing punctuation stripped), or text itself."""
     match = re.search(r"https?://\S+", text)
     return match.group(0).rstrip(").,]") if match else text.strip()

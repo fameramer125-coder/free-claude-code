@@ -191,16 +191,7 @@ def _referenced_provider_ids(settings: Settings) -> frozenset[str]:
 
 
 def _model_list_provider_ids_for_settings(settings: Settings) -> tuple[str, ...]:
-    """Return provider ids that are worth querying for model discovery.
-
-    Two paths:
-
-    - **Static-credential providers** (e.g. Ollama, LM Studio): only included when
-      they are explicitly referenced in configured model refs, to avoid pointless
-      queries to providers the user hasn't configured.
-    - **Credential-env providers** (e.g. OpenRouter, NIM): included when a non-empty
-      credential is present in settings, regardless of configured model refs.
-    """
+    """Return provider IDs worth querying for model discovery based on current settings."""
     referenced_provider_ids = _referenced_provider_ids(settings)
     provider_ids: list[str] = []
     for provider_id, descriptor in PROVIDER_DESCRIPTORS.items():
@@ -423,11 +414,7 @@ class ProviderRegistry:
         )
 
     async def cleanup(self) -> None:
-        """Call ``cleanup`` on every cached provider, then clear the cache.
-
-        Attempts all providers even if one fails. A single failure is re-raised
-        as-is; multiple failures are wrapped in :exc:`ExceptionGroup`.
-        """
+        """Call cleanup on every cached provider, then clear the cache; collects all errors."""
         if (
             self._model_list_refresh_task is not None
             and not self._model_list_refresh_task.done()

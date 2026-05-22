@@ -63,13 +63,7 @@ def get_proxy_service(
     request: Request,
     settings: Settings = Depends(get_settings),
 ) -> ClaudeProxyService:
-    """Build the per-request service, binding to the app-scoped ProviderRegistry.
-
-    The ``provider_getter`` lambda closes over ``request.app`` so providers are
-    resolved through the registry initialised at startup — not a process-cached
-    helper. Per PLAN.md, production handlers must use ``resolve_provider`` with
-    ``request.app`` to go through the app-scoped registry.
-    """
+    """Build the per-request service bound to the app-scoped ProviderRegistry."""
     return ClaudeProxyService(
         settings,
         provider_getter=lambda provider_type: dependencies.resolve_provider(
@@ -108,13 +102,7 @@ def _append_provider_model_variants(
     *,
     supports_thinking: bool | None = None,
 ) -> None:
-    """Append thinking and no-thinking gateway variants for a provider model ref.
-
-    ``supports_thinking is not False`` treats ``None`` (unknown / not yet cached)
-    the same as ``True`` — the thinking variant is included by default and only
-    suppressed when the provider has definitively reported no thinking support.
-    The no-thinking variant is always appended as a safe fallback.
-    """
+    """Append thinking and no-thinking gateway variants for a provider model ref."""
     if supports_thinking is not False:
         _append_unique_model(
             models,
@@ -137,16 +125,7 @@ def _append_provider_model_variants(
 def _build_models_list_response(
     settings: Settings, provider_registry: ProviderRegistry | None
 ) -> ModelsListResponse:
-    """Build the /v1/models response from three ordered, deduplicated sources.
-
-    1. Configured model refs (MODEL, MODEL_OPUS, etc.) — highest priority.
-    2. All other models discovered from the provider registry cache.
-    3. Hardcoded ``SUPPORTED_CLAUDE_MODELS`` — always present for client compat.
-
-    The ``seen`` set deduplicates across all sources; earlier entries win.
-    ``provider_registry=None`` is valid when the registry hasn't been attached
-    to app state yet (e.g. during startup or in tests).
-    """
+    """Build the /v1/models response from configured, discovered, and hardcoded model sources."""
     models: list[ModelResponse] = []
     seen: set[str] = set()
 
@@ -183,9 +162,6 @@ def _build_models_list_response(
     )
 
 
-# =============================================================================
-# Routes
-# =============================================================================
 @router.post("/v1/messages")
 async def create_message(
     request_data: MessagesRequest,

@@ -20,13 +20,7 @@ class ParserState(Enum):
 
 
 class HeuristicToolParser:
-    """
-    Stateful parser for raw text tool calls.
-
-    Some OpenAI-compatible models emit tool calls as text rather than structured
-    chunks. This parser converts the common ``● <function=...>`` form into
-    Anthropic-style ``tool_use`` blocks.
-    """
+    """Stateful parser converting text-emitted tool calls to Anthropic tool_use blocks."""
 
     _FUNC_START_PATTERN = re.compile(r"●\s*<function=([^>]+)>")
     _PARAM_PATTERN = re.compile(

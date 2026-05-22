@@ -1,8 +1,4 @@
-"""Optimization handlers for fast-path API responses.
-
-Each handler returns a MessagesResponse if the request matches and the
-optimization is enabled, otherwise None.
-"""
+"""Optimization handlers: fast-path responses that bypass the upstream API."""
 
 import uuid
 
@@ -29,11 +25,7 @@ def _text_response(
     input_tokens: int,
     output_tokens: int,
 ) -> MessagesResponse:
-    """Build a non-streaming text response for optimization fast-paths.
-
-    ``input_tokens`` and ``output_tokens`` are caller-supplied estimates —
-    no upstream API call is made, so real token counts are unavailable.
-    """
+    """Build a non-streaming text response for optimization fast-paths."""
     return MessagesResponse(
         id=f"msg_{uuid.uuid4()}",
         model=request_data.model,

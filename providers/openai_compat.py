@@ -1,8 +1,4 @@
-"""OpenAI-style chat base for :class:`OpenAIChatTransport` (NIM, etc.).
-
-``AnthropicMessagesTransport``-based providers (OpenRouter, LM Studio, DeepSeek, …) live
-in separate modules; do not list them as subclasses of this class.
-"""
+"""OpenAI-style chat base for OpenAIChatTransport (NVIDIA NIM and similar providers)."""
 
 import asyncio
 import json

@@ -6,9 +6,6 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-# =============================================================================
-# Content Block Types
-# =============================================================================
 class Role(StrEnum):
     user = "user"
     assistant = "assistant"
@@ -83,9 +80,6 @@ class SystemContent(_AnthropicBlockBase):
     text: str
 
 
-# =============================================================================
-# Message Types
-# =============================================================================
 class Message(BaseModel):
     role: Literal["user", "assistant"]
     content: (
@@ -117,20 +111,13 @@ class Tool(_AnthropicBlockBase):
 
 
 class ThinkingConfig(BaseModel):
-    """Extended thinking configuration.
-
-    Accepts both the ``enabled`` boolean form (older SDKs) and the ``type``
-    string form used by the current API (``{"type": "enabled", "budget_tokens": N}``).
-    """
+    """Extended thinking configuration (supports both boolean and type-string forms)."""
 
     enabled: bool | None = True
     type: str | None = None
     budget_tokens: int | None = None
 
 
-# =============================================================================
-# Request Models
-# =============================================================================
 class MessagesRequest(BaseModel):
     model_config = ConfigDict(extra="allow")
 

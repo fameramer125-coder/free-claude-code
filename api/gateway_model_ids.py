@@ -12,12 +12,7 @@ NO_THINKING_GATEWAY_MODEL_ID_PREFIX = "claude-3-freecc-no-thinking"
 
 @dataclass(frozen=True, slots=True)
 class DecodedGatewayModelId:
-    """Result of decoding a gateway model ID back to its provider/model pair.
-
-    ``force_thinking_enabled`` is ``None`` when the ID carries no thinking
-    preference (the caller should fall back to settings), or ``False`` when the
-    no-thinking prefix was used to force it off.
-    """
+    """Decoded gateway model ID with provider/model pair and optional thinking override."""
 
     provider_id: str
     provider_model: str
@@ -35,12 +30,7 @@ def no_thinking_gateway_model_id(provider_model_ref: str) -> str:
 
 
 def decode_gateway_model_id(model_name: str) -> DecodedGatewayModelId | None:
-    """Decode a gateway model ID back to its provider/model pair.
-
-    Returns ``None`` for any name not produced by :func:`gateway_model_id` or
-    :func:`no_thinking_gateway_model_id`.  Expected structure:
-    ``<gateway-prefix>/<provider_id>/<model_name>``.
-    """
+    """Decode a gateway model ID back to its provider/model pair; returns None if not a gateway ID."""
     prefix, separator, remainder = model_name.partition("/")
     if not separator:
         return None

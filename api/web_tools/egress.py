@@ -38,12 +38,7 @@ def _stream_getaddrinfo_or_raise(host: str, port: int) -> list[tuple]:
 def get_validated_stream_addrinfos_for_egress(
     url: str, policy: WebFetchEgressPolicy
 ) -> list[tuple]:
-    """Resolve and validate a URL for web_fetch, returning getaddrinfo rows for pinning.
-
-    Each HTTP connect pins to only these `getaddrinfo` results so a malicious DNS
-    server cannot rebind to a disallowed address between resolution and the TCP
-    connect (used by :func:`api.web_tools.outbound._run_web_fetch`).
-    """
+    """Resolve and validate a URL against egress policy; returns getaddrinfo rows for DNS pinning."""
     parsed = urlparse(url)
     scheme = (parsed.scheme or "").lower()
     if scheme not in policy.allowed_schemes:

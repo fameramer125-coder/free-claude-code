@@ -1,8 +1,4 @@
-"""Neutral provider catalog: IDs, credentials, defaults, proxy and capability metadata.
-
-Adapter factories live in :mod:`providers.registry`; this module stays free of
-provider implementation imports (see contract tests).
-"""
+"""Neutral provider catalog: IDs, credentials, defaults, and capability metadata."""
 
 from __future__ import annotations
 
@@ -25,18 +21,7 @@ OLLAMA_DEFAULT_BASE = "http://localhost:11434"
 
 @dataclass(frozen=True, slots=True)
 class ProviderDescriptor:
-    """Metadata for building :class:`~providers.base.ProviderConfig` and factory wiring.
-
-    Credential resolution (implemented in :mod:`providers.registry`):
-
-    - ``static_credential`` set → used as-is; env-var check is skipped entirely.
-    - ``credential_attr`` set → value read from the matching ``Settings`` attribute.
-    - ``credential_env`` set → shown in the auth error when the resolved credential
-      is empty or missing; ``None`` means no API key is required (local providers).
-
-    Known capability strings: ``"chat"``, ``"streaming"``, ``"tools"``,
-    ``"thinking"``, ``"rate_limit"``, ``"native_anthropic"``, ``"local"``.
-    """
+    """Provider metadata for building ProviderConfig and factory wiring."""
 
     provider_id: str
     transport_type: TransportType

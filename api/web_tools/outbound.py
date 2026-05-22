@@ -39,13 +39,7 @@ def _log_web_tool_failure(
     *,
     fetch_url: str | None = None,
 ) -> None:
-    """Log a web tool failure at the appropriate severity.
-
-    Egress violations are ``warning`` (expected, policy-driven); all other
-    failures are also ``warning`` (transient/external).  The resolved host is
-    included for ``web_fetch`` failures to aid diagnosis without logging the
-    full user-supplied URL.
-    """
+    """Log a web tool failure at warning severity (host only, not full URL)."""
     exc_type = type(error).__name__
     if isinstance(error, WebFetchEgressViolation):
         host = _safe_public_host_for_logs(fetch_url) if fetch_url else ""
@@ -190,10 +184,7 @@ async def _drain_aiohttp_body_capped(
 
 
 async def _run_web_search(query: str) -> list[dict[str, str]]:
-    """Fetch DuckDuckGo Lite results for ``query`` and parse them.
-
-    Uses the ``/lite/`` HTML endpoint — no API key required.
-    """
+    """Fetch DuckDuckGo Lite HTML results (no API key required) and parse them."""
     async with (
         httpx.AsyncClient(
             timeout=_REQUEST_TIMEOUT_S,
