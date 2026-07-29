@@ -354,6 +354,19 @@ notice. The next reply in that thread starts a fresh CLI session seeded with
 the memo instead of dragging the full history along. Disable with
 `AUTO_HANDOFF_ENABLED=false`.
 
+#### Context Nudge (Direct CLI / IDE Clients)
+
+Auto-handoff above only applies to the Discord/Telegram bot, since only the bot
+tracks a conversation tree it can restart. For direct use of Claude Code (CLI,
+VS Code, JetBrains) through this proxy, there is no equivalent session state to
+restart from the proxy side — but the proxy sees every request's context size
+regardless of client, so it can still warn. Set `CONTEXT_NUDGE_ENABLED=true` to
+have the proxy append an inline warning text block to the response once a
+request's context reaches `CONTEXT_NUDGE_THRESHOLD_TOKENS` (default 100k),
+suggesting `/compact` or a fresh session. This is informational only — it does
+not change routing, cost, or session state, and it applies to any client of
+this proxy (including the bot's own CLI subprocesses). Off by default.
+
 ### Voice Notes
 
 Voice notes work on Discord and Telegram. Choose one backend:

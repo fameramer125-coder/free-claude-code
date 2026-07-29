@@ -119,6 +119,25 @@ class TestContextBudget:
         with pytest.raises(ValidationError):
             Settings()
 
+    def test_context_nudge_settings_defaults(self, monkeypatch):
+        from config.settings import Settings
+
+        monkeypatch.setitem(Settings.model_config, "env_file", ())
+        settings = Settings()
+        assert settings.context_nudge_enabled is False
+        assert settings.context_nudge_threshold_tokens == 100_000
+
+    def test_context_nudge_threshold_rejects_non_positive(self, monkeypatch):
+        import pytest
+        from pydantic import ValidationError
+
+        from config.settings import Settings
+
+        monkeypatch.setitem(Settings.model_config, "env_file", ())
+        monkeypatch.setenv("CONTEXT_NUDGE_THRESHOLD_TOKENS", "0")
+        with pytest.raises(ValidationError):
+            Settings()
+
 
 class TestBuildHandoffPrompt:
     def test_contains_memo_and_request(self):
