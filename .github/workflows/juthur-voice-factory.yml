@@ -1,0 +1,93 @@
+name: Juthur Voice Factory
+
+on:
+  push:
+    branches: [claude/audio-content-juthoor-26reta]
+    paths:
+      - "audio_factory/scripts/**"
+      - "audio_factory/reference/**"
+      - ".github/workflows/juthur-voice-factory.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: juthur-voice-factory
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/audio-content-juthoor-26reta
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Install Chatterbox TTS
+        run: pip install --quiet chatterbox-tts
+
+      - name: Prepare reference audio
+        run: |
+          mkdir -p audio_factory/work audio_factory/output
+          ffmpeg -y -loglevel error -i audio_factory/reference/adel_ref.m4a \
+            -ar 24000 -ac 1 audio_factory/work/adel_ref.wav
+
+      - name: Generate voice clips
+        run: |
+          cat > audio_factory/work/generate_clips.py <<'PYEOF'
+          import glob
+          import os
+
+          import torchaudio
+          from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+
+          REF = "audio_factory/work/adel_ref.wav"
+          OUT = "audio_factory/output"
+
+          model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
+          for path in sorted(glob.glob("audio_factory/scripts/*.txt")):
+              name = os.path.splitext(os.path.basename(path))[0]
+              out_path = f"{OUT}/{name}.wav"
+              if os.path.exists(out_path):
+                  print(f"skip (exists): {name}")
+                  continue
+              lang = "ar" if name.upper().endswith("_AR") else "en"
+              with open(path, encoding="utf-8") as f:
+                  text = f.read().strip()
+              print(f"generating {name} [{lang}] ({len(text)} chars)")
+              wav = model.generate(text, language_id=lang, audio_prompt_path=REF)
+              torchaudio.save(out_path, wav, model.sr)
+              print(f"done: {out_path}")
+          PYEOF
+          python audio_factory/work/generate_clips.py
+
+      - name: Convert to mp3
+        run: |
+          for f in audio_factory/output/*.wav; do
+            ffmpeg -y -loglevel error -i "$f" -b:a 128k "${f%.wav}.mp3"
+          done
+          ls -la audio_factory/output/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: juthur-audio-output
+          path: audio_factory/output/
+
+      - name: Commit outputs back to branch
+        run: |
+          git config user.name "juthur-voice-factory"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f audio_factory/output/
+          git commit -m "Juthur voice factory output [skip ci]" || echo "nothing to commit"
+          git pull --rebase origin claude/audio-content-juthoor-26reta || true
+          git push origin HEAD:claude/audio-content-juthoor-26reta
