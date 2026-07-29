@@ -46,36 +46,104 @@ jobs:
           cat > audio_factory/work/generate_clips.py <<'PYEOF'
           import glob
           import os
+          import re
 
+          import torch
           import torchaudio
           from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 
           REF = "audio_factory/work/adel_ref.wav"
-          OUT = "audio_factory/output"
+          OUT = "audio_factory/work/raw"
+          MAX_CHUNK = 220
+          os.makedirs(OUT, exist_ok=True)
+
+          def chunks(text):
+              parts = re.split(r"(?<=[.!?؟…:])\s+", text)
+              merged, cur = [], ""
+              for p in parts:
+                  if len(cur) + len(p) + 1 <= MAX_CHUNK:
+                      cur = f"{cur} {p}".strip()
+                  else:
+                      if cur:
+                          merged.append(cur)
+                      cur = p
+              if cur:
+                  merged.append(cur)
+              return merged
 
           model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
+          pause = torch.zeros(1, int(0.35 * model.sr))
           for path in sorted(glob.glob("audio_factory/scripts/*.txt")):
               name = os.path.splitext(os.path.basename(path))[0]
               out_path = f"{OUT}/{name}.wav"
-              if os.path.exists(out_path):
+              if os.path.exists(f"audio_factory/output/{name}.mp3"):
                   print(f"skip (exists): {name}")
                   continue
               lang = "ar" if name.upper().endswith("_AR") else "en"
               with open(path, encoding="utf-8") as f:
                   text = f.read().strip()
-              print(f"generating {name} [{lang}] ({len(text)} chars)")
-              wav = model.generate(text, language_id=lang, audio_prompt_path=REF)
-              torchaudio.save(out_path, wav, model.sr)
+              pieces = []
+              for i, chunk in enumerate(chunks(text)):
+                  print(f"{name} [{lang}] chunk {i + 1}: {len(chunk)} chars")
+                  wav = model.generate(
+                      chunk,
+                      language_id=lang,
+                      audio_prompt_path=REF,
+                      exaggeration=0.35,
+                      cfg_weight=0.35,
+                      temperature=0.7,
+                  )
+                  pieces.extend([wav, pause])
+              torchaudio.save(out_path, torch.cat(pieces[:-1], dim=1), model.sr)
               print(f"done: {out_path}")
           PYEOF
           python audio_factory/work/generate_clips.py
 
-      - name: Convert to mp3
+      - name: Master and mix ambience
         run: |
-          for f in audio_factory/output/*.wav; do
-            ffmpeg -y -loglevel error -i "$f" -b:a 128k "${f%.wav}.mp3"
+          cat > audio_factory/work/master_mix.sh <<'SHEOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          MASTER_CHAIN="highpass=f=70,bass=g=2:f=140,treble=g=-1.5:f=9000,acompressor=threshold=-21dB:ratio=2.5:attack=15:release=250:makeup=3,loudnorm=I=-16:TP=-1.5:LRA=9"
+
+          ambience_for() {
+            case "$1" in
+              *_AR) echo "rain" ;;
+              *)    echo "forest" ;;
+            esac
+          }
+
+          bed_filter() {
+            case "$1" in
+              rain)   echo "anoisesrc=color=pink:sample_rate=24000:duration=%DUR%,highpass=f=400,lowpass=f=9000" ;;
+              wind)   echo "anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=850,tremolo=f=0.15:d=0.6" ;;
+              waves)  echo "anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=1200,tremolo=f=0.08:d=0.9" ;;
+              forest) echo "anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=2000,tremolo=f=0.2:d=0.5" ;;
+            esac
+          }
+
+          for f in audio_factory/work/raw/*.wav; do
+            name="$(basename "${f%.wav}")"
+            voiced="audio_factory/work/${name}_mastered.wav"
+            ffmpeg -y -loglevel error -i "$f" -af "$MASTER_CHAIN" -ar 24000 -ac 1 "$voiced"
+
+            dur="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$voiced")"
+            total="$(python3 -c "print(float('$dur') + 4.0)")"
+            fade_out_start="$(python3 -c "print(float('$total') - 2.5)")"
+            amb="$(ambience_for "$name")"
+            bed="$(bed_filter "$amb" | sed "s/%DUR%/$total/")"
+
+            ffmpeg -y -loglevel error -i "$voiced" -filter_complex \
+              "[0:a]adelay=1500|1500,apad=pad_dur=2.5[v];
+               ${bed},volume=0.035,afade=t=in:d=1.5,afade=t=out:st=${fade_out_start}:d=2.5[b];
+               [v][b]amix=inputs=2:duration=longest:normalize=0[out]" \
+              -map "[out]" -ar 24000 -ac 1 "audio_factory/output/${name}.wav"
+            ffmpeg -y -loglevel error -i "audio_factory/output/${name}.wav" -b:a 160k "audio_factory/output/${name}.mp3"
+            echo "mastered+${amb}: ${name}"
           done
           ls -la audio_factory/output/
+          SHEOF
+          bash audio_factory/work/master_mix.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
