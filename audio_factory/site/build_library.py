@@ -14,10 +14,11 @@ cdn = (
 )
 
 rows = []
-for line in open(os.path.join(base, "titles.tsv"), encoding="utf-8"):
-    parts = line.rstrip("\n").split("\t")
-    if len(parts) == 4:
-        rows.append(parts)
+with open(os.path.join(base, "titles.tsv"), encoding="utf-8") as f:
+    for line in f:
+        parts = line.rstrip("\n").split("\t")
+        if len(parts) == 4:
+            rows.append(parts)
 
 cards = []
 cats = []
