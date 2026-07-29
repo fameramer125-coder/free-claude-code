@@ -13,6 +13,9 @@ on:
 permissions:
   contents: write
 
+env:
+  RECIPE_VERSION: v6
+
 concurrency:
   group: juthur-voice-factory
   cancel-in-progress: false
@@ -31,13 +34,39 @@ jobs:
         run: |
           python3 - <<'PYEOF' >> "$GITHUB_OUTPUT"
           import glob
+          import hashlib
           import json
           import os
+
+          rv = os.environ["RECIPE_VERSION"]
+          amb = {}
+          if os.path.exists("audio_factory/ambience.tsv"):
+              for line in open("audio_factory/ambience.tsv", encoding="utf-8"):
+                  if "\t" in line:
+                      k, v = line.rstrip("\n").split("\t", 1)
+                      amb[k] = v
+
+          def recipe_hash(name, path):
+              d = hashlib.sha256()
+              d.update(rv.encode())
+              with open(path, "rb") as f:
+                  d.update(f.read())
+              d.update(amb.get(name, "").encode())
+              return d.hexdigest()[:16]
 
           pending = []
           for path in sorted(glob.glob("audio_factory/scripts/*.txt")):
               name = os.path.splitext(os.path.basename(path))[0]
-              if not os.path.exists(f"audio_factory/output/{name}.mp3"):
+              sha_path = f"audio_factory/output/{name}.sha"
+              expected = recipe_hash(name, path)
+              current = (
+                  open(sha_path).read().strip()
+                  if os.path.exists(sha_path)
+                  else ""
+              )
+              if current != expected or not os.path.exists(
+                  f"audio_factory/output/{name}.mp3"
+              ):
                   pending.append(name)
           print(f"scripts={json.dumps(pending)}")
           print(f"count={len(pending)}")
@@ -83,6 +112,7 @@ jobs:
           SCRIPT_NAME: ${{ matrix.script }}
         run: |
           cat > audio_factory/work/generate_clip.py <<'PYEOF'
+          import hashlib
           import os
           import re
 
@@ -91,47 +121,99 @@ jobs:
           from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 
           name = os.environ["SCRIPT_NAME"]
+          rv = os.environ["RECIPE_VERSION"]
           lang = "ar" if name.upper().endswith("_AR") else "en"
           ref = (
               "audio_factory/work/adel_ref.wav"
               if lang == "ar"
               else "audio_factory/work/adel_ref_en.wav"
           )
-          MAX_CHUNK = 220
+          MAX_CHUNK = 180
 
-          def chunks(text):
-              parts = re.split(r"(?<=[.!?؟…:])\s+", text)
-              merged, cur = [], ""
-              for p in parts:
-                  if len(cur) + len(p) + 1 <= MAX_CHUNK:
-                      cur = f"{cur} {p}".strip()
-                  else:
-                      if cur:
-                          merged.append(cur)
-                      cur = p
-              if cur:
-                  merged.append(cur)
-              return merged
+          def jitter(base, i):
+              frac = ((i + 1) * 2654435761 % 100) / 100.0
+              return base * (0.85 + 0.3 * frac)
+
+          def breath_groups(text):
+              """Yield (chunk, pause_after_seconds): comma-split inside long
+              sentences (short pause), sentence pauses inside a paragraph
+              (medium), paragraph pauses (long) — like a reader breathing."""
+              groups = []
+              paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
+              for p in paragraphs:
+                  sentences = re.split(r"(?<=[.!?؟…:])\s+", p)
+                  merged, cur = [], ""
+                  for s in sentences:
+                      if len(cur) + len(s) + 1 <= MAX_CHUNK:
+                          cur = f"{cur} {s}".strip()
+                      else:
+                          if cur:
+                              merged.append(cur)
+                          cur = s
+                  if cur:
+                      merged.append(cur)
+                  for k, chunk in enumerate(merged):
+                      if len(chunk) > 220:
+                          subs = re.split(r"(?<=[،,—])\s+", chunk)
+                          for m, sub in enumerate(subs):
+                              last_sub = m == len(subs) - 1
+                              last_chunk = k == len(merged) - 1
+                              if not last_sub:
+                                  pause = 0.25
+                              elif last_chunk:
+                                  pause = 0.85
+                              else:
+                                  pause = 0.55
+                              groups.append((sub, pause))
+                      else:
+                          groups.append(
+                              (chunk, 0.85 if k == len(merged) - 1 else 0.55)
+                          )
+              return groups
+
+          def edge_fade(wav, sr, ms=40):
+              n = min(int(sr * ms / 1000), wav.shape[1] // 4)
+              if n > 0:
+                  ramp = torch.linspace(0.0, 1.0, n)
+                  wav[:, :n] *= ramp
+                  wav[:, -n:] *= ramp.flip(0)
+              return wav
 
           with open(f"audio_factory/scripts/{name}.txt", encoding="utf-8") as f:
-              text = re.sub(r"\[[^\]]*\]", " ", f.read()).strip()
+              raw_text = f.read()
+          text = re.sub(r"\[[^\]]*\]", " ", raw_text).strip()
 
           model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
-          pause = torch.zeros(1, int(0.35 * model.sr))
           pieces = []
-          for i, chunk in enumerate(chunks(text)):
-              print(f"{name} [{lang}] chunk {i + 1}: {len(chunk)} chars", flush=True)
+          exaggeration = 0.45 if lang == "ar" else 0.4
+          for i, (chunk, pause_s) in enumerate(breath_groups(text)):
+              print(f"{name} [{lang}] chunk {i + 1}: {len(chunk)} chars, pause {pause_s}", flush=True)
               wav = model.generate(
                   chunk,
                   language_id=lang,
                   audio_prompt_path=ref,
-                  exaggeration=0.35,
+                  exaggeration=exaggeration,
                   cfg_weight=0.35,
                   temperature=0.7,
               )
-              pieces.extend([wav, pause])
+              pieces.append(edge_fade(wav, model.sr))
+              pieces.append(torch.zeros(1, int(jitter(pause_s, i) * model.sr)))
           out = f"audio_factory/work/{name}_raw.wav"
           torchaudio.save(out, torch.cat(pieces[:-1], dim=1), model.sr)
+
+          amb = {}
+          if os.path.exists("audio_factory/ambience.tsv"):
+              for line in open("audio_factory/ambience.tsv", encoding="utf-8"):
+                  if "\t" in line:
+                      k, v = line.rstrip("\n").split("\t", 1)
+                      amb[k] = v
+          d = hashlib.sha256()
+          d.update(rv.encode())
+          d.update(raw_text.encode("utf-8"))
+          d.update(amb.get(name, "").encode())
+          os.makedirs("audio_factory/output", exist_ok=True)
+          with open(f"audio_factory/output/{name}.sha", "w") as f:
+              f.write(d.hexdigest()[:16])
           print(f"done: {out}")
           PYEOF
           python audio_factory/work/generate_clip.py
@@ -154,7 +236,7 @@ jobs:
           case "$amb" in
             rain)   bedsrc="anoisesrc=color=pink:sample_rate=24000:duration=%DUR%,highpass=f=400,lowpass=f=9000" ;;
             wind)   bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=850,tremolo=f=0.15:d=0.6" ;;
-            waves)  bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=1200,tremolo=f=0.08:d=0.9" ;;
+            waves)  bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=1200,tremolo=f=0.1:d=0.9" ;;
             forest) bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=2000,tremolo=f=0.2:d=0.5" ;;
             oud)    bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=700,tremolo=f=0.1:d=0.5" ;;
             *)      bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=850,tremolo=f=0.15:d=0.6" ;;
@@ -180,6 +262,7 @@ jobs:
           path: |
             audio_factory/output/${{ matrix.script }}.wav
             audio_factory/output/${{ matrix.script }}.mp3
+            audio_factory/output/${{ matrix.script }}.sha
 
   collect:
     needs: [plan, generate]
