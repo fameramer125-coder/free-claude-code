@@ -38,7 +38,8 @@ jobs:
       - name: Prepare reference audio
         run: |
           mkdir -p audio_factory/work audio_factory/output
-          ffmpeg -y -loglevel error -i audio_factory/reference/adel_ref.m4a \
+          ffmpeg -y -loglevel error -ss 10 -t 25 \
+            -i audio_factory/reference/adel_ref.m4a \
             -ar 24000 -ac 1 audio_factory/work/adel_ref.wav
           ffmpeg -y -loglevel error -ss 10 -t 25 \
             -i audio_factory/reference/adel_ref_en.m4a \
