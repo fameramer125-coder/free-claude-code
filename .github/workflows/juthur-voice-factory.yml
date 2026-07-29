@@ -40,6 +40,9 @@ jobs:
           mkdir -p audio_factory/work audio_factory/output
           ffmpeg -y -loglevel error -i audio_factory/reference/adel_ref.m4a \
             -ar 24000 -ac 1 audio_factory/work/adel_ref.wav
+          ffmpeg -y -loglevel error -ss 10 -t 25 \
+            -i audio_factory/reference/adel_ref_en.m4a \
+            -ar 24000 -ac 1 audio_factory/work/adel_ref_en.wav
 
       - name: Generate voice clips
         run: |
@@ -52,7 +55,8 @@ jobs:
           import torchaudio
           from chatterbox.mtl_tts import ChatterboxMultilingualTTS
 
-          REF = "audio_factory/work/adel_ref.wav"
+          REF_AR = "audio_factory/work/adel_ref.wav"
+          REF_EN = "audio_factory/work/adel_ref_en.wav"
           OUT = "audio_factory/work/raw"
           MAX_CHUNK = 220
           os.makedirs(OUT, exist_ok=True)
@@ -80,6 +84,7 @@ jobs:
                   print(f"skip (exists): {name}")
                   continue
               lang = "ar" if name.upper().endswith("_AR") else "en"
+              ref = REF_AR if lang == "ar" else REF_EN
               with open(path, encoding="utf-8") as f:
                   text = f.read().strip()
               pieces = []
@@ -88,7 +93,7 @@ jobs:
                   wav = model.generate(
                       chunk,
                       language_id=lang,
-                      audio_prompt_path=REF,
+                      audio_prompt_path=ref,
                       exaggeration=0.35,
                       cfg_weight=0.35,
                       temperature=0.7,
