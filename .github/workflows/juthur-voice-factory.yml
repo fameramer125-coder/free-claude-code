@@ -14,11 +14,11 @@ permissions:
   contents: write
 
 env:
-  RECIPE_VERSION: v6
+  RECIPE_VERSION: v7
 
 concurrency:
   group: juthur-voice-factory
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   plan:
@@ -226,7 +226,7 @@ jobs:
           name="$SCRIPT_NAME"
           raw="audio_factory/work/${name}_raw.wav"
           voiced="audio_factory/work/${name}_mastered.wav"
-          MASTER_CHAIN="highpass=f=70,bass=g=2:f=140,treble=g=-1.5:f=9000,acompressor=threshold=-21dB:ratio=2.5:attack=15:release=250:makeup=3,loudnorm=I=-16:TP=-1.5:LRA=9"
+          MASTER_CHAIN="highpass=f=70,bass=g=2:f=140,treble=g=-1.5:f=9000,deesser,acompressor=threshold=-21dB:ratio=2.5:attack=15:release=250:makeup=3,loudnorm=I=-20:TP=-3.5:LRA=7"
           ffmpeg -y -loglevel error -i "$raw" -af "$MASTER_CHAIN" -ar 24000 -ac 1 "$voiced"
 
           amb="$(awk -F'\t' -v n="$name" '$1==n{print $2}' audio_factory/ambience.tsv || true)"
@@ -251,9 +251,11 @@ jobs:
             "[0:a]adelay=1500|1500,apad=pad_dur=2.5[v];
              ${bed},volume=0.035,afade=t=in:d=1.5,afade=t=out:st=${fade_out_start}:d=2.5[b];
              [v][b]amix=inputs=2:duration=longest:normalize=0[out]" \
-            -map "[out]" -ar 24000 -ac 1 "audio_factory/output/${name}.wav"
-          ffmpeg -y -loglevel error -i "audio_factory/output/${name}.wav" -b:a 160k "audio_factory/output/${name}.mp3"
+            -map "[out]" -ar 44100 -ac 1 "audio_factory/output/${name}.wav"
+          ffmpeg -y -loglevel error -i "audio_factory/output/${name}.wav" -codec:a libmp3lame -b:a 192k -ar 44100 -ac 1 "audio_factory/output/${name}.mp3"
           echo "mastered [$amb]: ${name}"
+          echo "--- ACX QC (target: RMS -23..-18 dBFS, peak <= -3 dBFS) ---"
+          ffmpeg -i "audio_factory/output/${name}.mp3" -af astats=measure_overall=RMS_level+Peak_level:measure_perchannel=none -f null - 2>&1 | grep -E "RMS level|Peak level" || true
 
       - name: Upload clip artifact
         uses: actions/upload-artifact@v4
