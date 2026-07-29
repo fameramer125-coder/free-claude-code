@@ -343,6 +343,17 @@ Useful commands:
 - `/clear` resets sessions; reply to clear one branch.
 - `/stats` shows session state.
 
+#### Automatic Context Handoff
+
+Long reply chains resend the whole conversation on every turn, so cost grows
+quadratically with thread length. When a resumed bot conversation's context
+exceeds `AUTO_HANDOFF_THRESHOLD_TOKENS` (default 80k, measured from provider
+usage metadata), the bot automatically asks the session for a short handoff
+memo — current state, decisions, open questions, next step — and posts a ♻️
+notice. The next reply in that thread starts a fresh CLI session seeded with
+the memo instead of dragging the full history along. Disable with
+`AUTO_HANDOFF_ENABLED=false`.
+
 ### Voice Notes
 
 Voice notes work on Discord and Telegram. Choose one backend:

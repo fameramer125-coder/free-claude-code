@@ -30,6 +30,9 @@ _RUNTIME_EXTRAS = {
     "log_raw_cli_diagnostics": False,
     "log_messaging_error_details": False,
     "configured_chat_model_refs": lambda: (),
+    "auto_handoff_enabled": True,
+    "auto_handoff_threshold_tokens": 80_000,
+    "auto_handoff_memo_max_chars": 4_000,
 }
 
 
