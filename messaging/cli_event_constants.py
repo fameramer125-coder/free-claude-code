@@ -15,6 +15,7 @@ STATUS_MESSAGE_PREFIXES = (
     "📋",
     "📊",
     "🔄",
+    "♻️",
 )
 
 # Event types that update the transcript (frozenset for O(1) membership)

@@ -283,6 +283,30 @@ class Settings(BaseSettings):
         default=None, validation_alias="MAX_MESSAGE_LOG_ENTRIES_PER_CHAT"
     )
 
+    # ==================== Automatic Context Handoff ====================
+    # When a bot conversation's context exceeds the threshold, the bot writes a
+    # handoff memo and the next reply starts a fresh CLI session seeded with it.
+    auto_handoff_enabled: bool = Field(
+        default=True, validation_alias="AUTO_HANDOFF_ENABLED"
+    )
+    auto_handoff_threshold_tokens: int = Field(
+        default=80_000, validation_alias="AUTO_HANDOFF_THRESHOLD_TOKENS"
+    )
+    auto_handoff_memo_max_chars: int = Field(
+        default=4_000, validation_alias="AUTO_HANDOFF_MEMO_MAX_CHARS"
+    )
+
+    # ==================== Context Nudge (direct CLI / IDE clients) ====================
+    # Proxy-level, session-agnostic warning appended as an extra text block when a
+    # request's context is large. Unlike auto-handoff (bot-only, forces a fresh
+    # session), this only informs any client talking to this proxy directly.
+    context_nudge_enabled: bool = Field(
+        default=False, validation_alias="CONTEXT_NUDGE_ENABLED"
+    )
+    context_nudge_threshold_tokens: int = Field(
+        default=100_000, validation_alias="CONTEXT_NUDGE_THRESHOLD_TOKENS"
+    )
+
     # ==================== Server ====================
     host: str = "0.0.0.0"
     port: int = 8082
@@ -327,6 +351,20 @@ class Settings(BaseSettings):
         # "" arrives from dotenv; None arrives when no env source sets the var.
         if v == "" or v is None:
             return None
+        return v
+
+    @field_validator("auto_handoff_threshold_tokens", "auto_handoff_memo_max_chars")
+    @classmethod
+    def validate_auto_handoff_limits(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("auto handoff limits must be > 0")
+        return v
+
+    @field_validator("context_nudge_threshold_tokens")
+    @classmethod
+    def validate_context_nudge_threshold(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("context_nudge_threshold_tokens must be > 0")
         return v
 
     @field_validator("whisper_device")

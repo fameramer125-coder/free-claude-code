@@ -204,6 +204,7 @@ class AppRuntime:
 
     async def _start_message_handler(self) -> None:
         from cli.manager import CLISessionManager
+        from messaging.context_budget import ContextBudget
         from messaging.handler import ClaudeMessageHandler
         from messaging.session import SessionStore
 
@@ -248,6 +249,7 @@ class AppRuntime:
             log_raw_messaging_content=self.settings.log_raw_messaging_content,
             log_raw_cli_diagnostics=self.settings.log_raw_cli_diagnostics,
             log_messaging_error_details=self.settings.log_messaging_error_details,
+            context_budget=ContextBudget.from_settings(self.settings),
         )
         self._restore_tree_state(session_store)
 

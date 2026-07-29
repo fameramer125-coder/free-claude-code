@@ -12,6 +12,12 @@ from .command_dispatcher import (
     message_kind_for_command,
     parse_command_base,
 )
+from .context_budget import (
+    HANDOFF_MEMO_PROMPT,
+    ContextBudget,
+    build_handoff_prompt,
+    extract_context_tokens,
+)
 from .event_parser import parse_cli_event
 from .models import IncomingMessage
 from .node_event_pipeline import handle_session_info_event, process_parsed_cli_event
@@ -43,10 +49,12 @@ class ClaudeMessageHandler:
         log_raw_messaging_content: bool = False,
         log_raw_cli_diagnostics: bool = False,
         log_messaging_error_details: bool = False,
+        context_budget: ContextBudget | None = None,
     ):
         self.platform = platform
         self.cli_manager = cli_manager
         self.session_store = session_store
+        self._context_budget = context_budget or ContextBudget()
         self._debug_platform_edits = debug_platform_edits
         self._debug_subagent_stack = debug_subagent_stack
         self._log_raw_messaging_content = log_raw_messaging_content
@@ -74,6 +82,11 @@ class ClaudeMessageHandler:
     def tree_queue(self) -> TreeQueueManager:
         """Accessor for the current tree queue manager."""
         return self._tree_queue
+
+    @property
+    def context_budget(self) -> ContextBudget:
+        """Accessor for the automatic handoff policy."""
+        return self._context_budget
 
     def replace_tree_queue(self, tree_queue: TreeQueueManager) -> None:
         """Replace tree queue manager via explicit API."""
@@ -314,10 +327,16 @@ class ClaudeMessageHandler:
         last_status: str | None = None
 
         parent_session_id = None
+        prompt = incoming.text
         if tree and node.parent_id:
-            parent_session_id = tree.get_parent_session_id(node_id)
-            if parent_session_id:
-                logger.info(f"Will fork from parent session: {parent_session_id}")
+            handoff_memo = tree.get_parent_handoff_memo(node_id)
+            if handoff_memo:
+                prompt = build_handoff_prompt(handoff_memo, incoming.text)
+                logger.info("Parent session handed off; starting fresh session")
+            else:
+                parent_session_id = tree.get_parent_session_id(node_id)
+                if parent_session_id:
+                    logger.info(f"Will fork from parent session: {parent_session_id}")
 
         editor = ThrottledTranscriptEditor(
             platform=self.platform,
@@ -365,8 +384,9 @@ class ClaudeMessageHandler:
 
             logger.info("HANDLER: Starting CLI task processing for node {}", node_id)
             event_count = 0
+            max_context_tokens: int | None = None
             async for event_data in cli_session.start_task(
-                incoming.text,
+                prompt,
                 session_id=parent_session_id,
                 fork_session=bool(parent_session_id),
             ):
@@ -375,6 +395,11 @@ class ClaudeMessageHandler:
                         "HANDLER: Non-dict event received: {}", type(event_data)
                     )
                     continue
+                context_tokens = extract_context_tokens(event_data)
+                if context_tokens is not None and (
+                    max_context_tokens is None or context_tokens > max_context_tokens
+                ):
+                    max_context_tokens = context_tokens
                 event_count += 1
                 if event_count % 10 == 0:
                     logger.debug("HANDLER: Processed {} events so far", event_count)
@@ -417,6 +442,15 @@ class ClaudeMessageHandler:
                         propagate_error_to_children=self._propagate_error_to_children,
                         log_messaging_error_details=self._log_messaging_error_details,
                     )
+
+            await self._maybe_handoff(
+                cli_session,
+                tree,
+                node_id,
+                captured_session_id,
+                max_context_tokens,
+                incoming,
+            )
 
         except asyncio.CancelledError:
             logger.warning("HANDLER: Task cancelled for node {}", node_id)
@@ -467,6 +501,89 @@ class ClaudeMessageHandler:
                         e, log_full_message=self._log_messaging_error_details
                     ),
                 )
+
+    async def _maybe_handoff(
+        self,
+        cli_session: object,
+        tree: MessageTree | None,
+        node_id: str,
+        session_id: str | None,
+        context_tokens: int | None,
+        incoming: IncomingMessage,
+    ) -> None:
+        """Generate a handoff memo when the completed session exceeded the context budget."""
+        if not self._context_budget.should_handoff(context_tokens):
+            return
+        if not tree or not session_id:
+            return
+        node = tree.get_node(node_id)
+        if not node or node.state != MessageState.COMPLETED:
+            return
+
+        logger.info(
+            "HANDLER: Context {} tokens >= {} threshold; generating handoff memo",
+            context_tokens,
+            self._context_budget.threshold_tokens,
+        )
+        memo = await self._generate_handoff_memo(cli_session, session_id)
+        if not memo:
+            logger.warning("HANDLER: Handoff memo unavailable; keeping session resume")
+            return
+
+        await tree.set_handoff_memo(node_id, memo)
+        self.session_store.save_tree(tree.root_id, tree.to_dict())
+
+        msg_id = await self.platform.queue_send_message(
+            incoming.chat_id,
+            self.format_status(
+                "♻️",
+                "Handoff.",
+                f"Context reached ~{context_tokens:,} tokens; "
+                "the next reply starts a fresh session from a memo.",
+            ),
+            fire_and_forget=False,
+            message_thread_id=incoming.message_thread_id,
+        )
+        self.record_outgoing_message(
+            incoming.platform, incoming.chat_id, msg_id, "handoff"
+        )
+
+    async def _generate_handoff_memo(
+        self, cli_session: object, session_id: str
+    ) -> str | None:
+        """Ask the finished session for a handoff memo; returns None on any failure."""
+        parts: list[str] = []
+        try:
+            start_task = getattr(cli_session, "start_task", None)
+            if start_task is None:
+                return None
+            async for event_data in start_task(
+                HANDOFF_MEMO_PROMPT,
+                session_id=session_id,
+                fork_session=True,
+            ):
+                if not isinstance(event_data, dict):
+                    continue
+                for parsed in parse_cli_event(
+                    event_data, log_raw_cli=self._log_raw_cli_diagnostics
+                ):
+                    ptype = parsed.get("type")
+                    if ptype in ("text_chunk", "text_delta"):
+                        parts.append(parsed.get("text", ""))
+                    elif ptype == "error":
+                        logger.warning("HANDLER: Handoff memo run reported an error")
+                        return None
+        except Exception as e:
+            logger.warning(
+                "HANDLER: Handoff memo generation failed: {}",
+                format_exception_for_log(
+                    e, log_full_message=self._log_messaging_error_details
+                ),
+            )
+            return None
+
+        memo = self._context_budget.clip_memo("".join(parts).strip())
+        return memo or None
 
     async def _propagate_error_to_children(
         self,

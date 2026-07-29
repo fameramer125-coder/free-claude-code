@@ -452,6 +452,7 @@ async def test_process_node_reply_uses_parent_session_for_manager_and_fork(
     mock_tree.root_id = "root_msg"
     mock_tree.to_dict.return_value = {}
     mock_tree.get_parent_session_id = MagicMock(return_value=parent_claude_session)
+    mock_tree.get_parent_handoff_memo = MagicMock(return_value=None)
 
     with patch.object(
         handler.tree_queue, "get_tree_for_node", MagicMock(return_value=mock_tree)

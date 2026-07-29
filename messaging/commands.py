@@ -73,7 +73,9 @@ async def handle_stats_command(
         + "\n"
         + ctx.escape_text(f"• Active CLI: {stats['active_sessions']}")
         + "\n"
-        + ctx.escape_text(f"• Message Trees: {tree_count}"),
+        + ctx.escape_text(f"• Message Trees: {tree_count}")
+        + "\n"
+        + ctx.escape_text(f"• Auto Handoff: {handler.context_budget.describe()}"),
         fire_and_forget=False,
         message_thread_id=incoming.message_thread_id,
     )

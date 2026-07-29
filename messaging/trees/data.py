@@ -70,6 +70,9 @@ class MessageNode:
     state: MessageState = MessageState.PENDING
     parent_id: str | None = None  # Parent node ID (None for root)
     session_id: str | None = None  # Claude session ID (forked from parent)
+    # Handoff memo written when this node's session hit the context budget;
+    # children seed a fresh session with it instead of resuming session_id.
+    handoff_memo: str | None = None
     children_ids: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     completed_at: datetime | None = None
@@ -97,6 +100,7 @@ class MessageNode:
             "state": self.state.value,
             "parent_id": self.parent_id,
             "session_id": self.session_id,
+            "handoff_memo": self.handoff_memo,
             "children_ids": self.children_ids,
             "created_at": self.created_at.isoformat(),
             "completed_at": self.completed_at.isoformat()
@@ -126,6 +130,7 @@ class MessageNode:
             state=MessageState(data["state"]),
             parent_id=data.get("parent_id"),
             session_id=data.get("session_id"),
+            handoff_memo=data.get("handoff_memo"),
             children_ids=data.get("children_ids", []),
             created_at=datetime.fromisoformat(data["created_at"]),
             completed_at=datetime.fromisoformat(data["completed_at"])
@@ -214,6 +219,21 @@ class MessageTree:
         """Return the parent node's session ID, or None for root nodes."""
         parent = self.get_parent(node_id)
         return parent.session_id if parent else None
+
+    def get_parent_handoff_memo(self, node_id: str) -> str | None:
+        """Return the parent node's handoff memo, or None if absent."""
+        parent = self.get_parent(node_id)
+        return parent.handoff_memo if parent else None
+
+    async def set_handoff_memo(self, node_id: str, memo: str) -> None:
+        """Attach a handoff memo to a node so children start fresh sessions."""
+        async with self._lock:
+            node = self._nodes.get(node_id)
+            if not node:
+                logger.warning("Node {} not found for handoff memo", node_id)
+                return
+            node.handoff_memo = memo
+            logger.debug("Node {} handoff memo set ({} chars)", node_id, len(memo))
 
     async def update_state(
         self,

@@ -15,6 +15,11 @@ from core.anthropic.sse import ANTHROPIC_SSE_RESPONSE_HEADERS
 from providers.base import BaseProvider
 from providers.exceptions import InvalidRequestError, ProviderError
 
+from .context_nudge import (
+    build_nudge_text,
+    should_nudge,
+    wrap_stream_with_context_nudge,
+)
 from .model_router import ModelRouter
 from .models.anthropic import MessagesRequest, TokenCountRequest
 from .models.responses import TokenCountResponse
@@ -157,14 +162,17 @@ class ClaudeProxyService:
             input_tokens = self._token_counter(
                 routed.request.messages, routed.request.system, routed.request.tools
             )
-            return anthropic_sse_streaming_response(
-                provider.stream_response(
-                    routed.request,
-                    input_tokens=input_tokens,
-                    request_id=request_id,
-                    thinking_enabled=routed.resolved.thinking_enabled,
-                ),
+            response_stream = provider.stream_response(
+                routed.request,
+                input_tokens=input_tokens,
+                request_id=request_id,
+                thinking_enabled=routed.resolved.thinking_enabled,
             )
+            if should_nudge(self._settings, input_tokens):
+                response_stream = wrap_stream_with_context_nudge(
+                    response_stream, build_nudge_text(input_tokens)
+                )
+            return anthropic_sse_streaming_response(response_stream)
 
         except ProviderError:
             raise
