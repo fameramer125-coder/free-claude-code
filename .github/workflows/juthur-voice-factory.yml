@@ -79,7 +79,7 @@ jobs:
     timeout-minutes: 120
     strategy:
       fail-fast: false
-      max-parallel: 20
+      max-parallel: 6
       matrix:
         script: ${{ fromJson(needs.plan.outputs.scripts) }}
     steps:
@@ -114,7 +114,9 @@ jobs:
           cat > audio_factory/work/generate_clip.py <<'PYEOF'
           import hashlib
           import os
+          import random
           import re
+          import time
 
           import torch
           import torchaudio
@@ -179,11 +181,25 @@ jobs:
                   wav[:, -n:] *= ramp.flip(0)
               return wav
 
+          time.sleep(random.uniform(0, 20))
+
           with open(f"audio_factory/scripts/{name}.txt", encoding="utf-8") as f:
               raw_text = f.read()
           text = re.sub(r"\[[^\]]*\]", " ", raw_text).strip()
 
-          model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
+          def load_model(retries=6):
+              delay = 10
+              for attempt in range(retries):
+                  try:
+                      return ChatterboxMultilingualTTS.from_pretrained(device="cpu")
+                  except Exception as e:
+                      if attempt == retries - 1:
+                          raise
+                      print(f"model load failed ({e}); retrying in {delay}s", flush=True)
+                      time.sleep(delay)
+                      delay = min(delay * 2, 120)
+
+          model = load_model()
           pieces = []
           exaggeration = 0.45 if lang == "ar" else 0.4
           for i, (chunk, pause_s) in enumerate(breath_groups(text)):
