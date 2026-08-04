@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 env:
-  RECIPE_VERSION: v7
+  RECIPE_VERSION: v8
 
 concurrency:
   group: juthur-voice-factory
@@ -218,42 +218,21 @@ jobs:
           PYEOF
           python audio_factory/work/generate_clip.py
 
-      - name: Master and mix ambience
+      - name: Master (clean voice, no background)
         env:
           SCRIPT_NAME: ${{ matrix.script }}
         run: |
           set -euo pipefail
           name="$SCRIPT_NAME"
           raw="audio_factory/work/${name}_raw.wav"
-          voiced="audio_factory/work/${name}_mastered.wav"
-          MASTER_CHAIN="highpass=f=70,bass=g=2:f=140,treble=g=-1.5:f=9000,deesser,acompressor=threshold=-21dB:ratio=2.5:attack=15:release=250:makeup=3,loudnorm=I=-20:TP=-3.5:LRA=7"
-          ffmpeg -y -loglevel error -i "$raw" -af "$MASTER_CHAIN" -ar 24000 -ac 1 "$voiced"
 
-          amb="$(awk -F'\t' -v n="$name" '$1==n{print $2}' audio_factory/ambience.tsv || true)"
-          if [ -z "$amb" ]; then
-            case "$name" in *_AR) amb="rain" ;; *) amb="forest" ;; esac
-          fi
-          case "$amb" in
-            rain)   bedsrc="anoisesrc=color=pink:sample_rate=24000:duration=%DUR%,highpass=f=400,lowpass=f=9000" ;;
-            wind)   bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=850,tremolo=f=0.15:d=0.6" ;;
-            waves)  bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=1200,tremolo=f=0.1:d=0.9" ;;
-            forest) bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=2000,tremolo=f=0.2:d=0.5" ;;
-            oud)    bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=700,tremolo=f=0.1:d=0.5" ;;
-            *)      bedsrc="anoisesrc=color=brown:sample_rate=24000:duration=%DUR%,lowpass=f=850,tremolo=f=0.15:d=0.6" ;;
-          esac
+          dur="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$raw")"
+          fade_out_start="$(python3 -c "print(max(0.0, float('$dur') - 0.4))")"
+          MASTER_CHAIN="highpass=f=70,afftdn=nr=15:nf=-30,bass=g=2:f=140,treble=g=-1.5:f=9000,deesser,acompressor=threshold=-21dB:ratio=2.5:attack=15:release=250:makeup=3,loudnorm=I=-20:TP=-3.5:LRA=7,afade=t=in:d=0.3,afade=t=out:st=${fade_out_start}:d=0.4"
 
-          dur="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$voiced")"
-          total="$(python3 -c "print(float('$dur') + 4.0)")"
-          fade_out_start="$(python3 -c "print(float('$total') - 2.5)")"
-          bed="$(echo "$bedsrc" | sed "s/%DUR%/$total/")"
-
-          ffmpeg -y -loglevel error -i "$voiced" -filter_complex \
-            "[0:a]adelay=1500|1500,apad=pad_dur=2.5[v];
-             ${bed},volume=0.035,afade=t=in:d=1.5,afade=t=out:st=${fade_out_start}:d=2.5[b];
-             [v][b]amix=inputs=2:duration=longest:normalize=0[out]" \
-            -map "[out]" -ar 44100 -ac 1 "audio_factory/output/${name}.wav"
+          ffmpeg -y -loglevel error -i "$raw" -af "$MASTER_CHAIN" -ar 44100 -ac 1 "audio_factory/output/${name}.wav"
           ffmpeg -y -loglevel error -i "audio_factory/output/${name}.wav" -codec:a libmp3lame -b:a 192k -ar 44100 -ac 1 "audio_factory/output/${name}.mp3"
-          echo "mastered [$amb]: ${name}"
+          echo "mastered (clean, no ambience): ${name}"
           echo "--- ACX QC (target: RMS -23..-18 dBFS, peak <= -3 dBFS) ---"
           ffmpeg -i "audio_factory/output/${name}.mp3" -af astats=measure_overall=RMS_level+Peak_level:measure_perchannel=none -f null - 2>&1 | grep -E "RMS level|Peak level" || true
 
