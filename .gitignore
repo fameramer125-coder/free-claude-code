@@ -1,5 +1,6 @@
 __pycache__
-.claude
+.claude/*
+!.claude/settings.json
 .cursor
 .pytest_cache
 .ruff_cache
