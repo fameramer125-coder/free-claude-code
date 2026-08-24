@@ -1,0 +1,629 @@
+<title>مصفوفة تكرار التربية الأخلاقية</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --bg: #F5F6F8;
+    --surface: #FFFFFF;
+    --surface-2: #EEF1F4;
+    --ink: #1F2836;
+    --muted: #5C6878;
+    --faint: #8B95A3;
+    --line: #DFE4EB;
+    --line-strong: #C7CFD9;
+    --accent: #2F5D50;
+    --accent-soft: #E4EEEA;
+    --gold: #A98B4F;
+
+    --full: #9E2B22;
+    --full-bg: #F7E7E4;
+    --full-line: #DBA89F;
+
+    --rel: #8C5B00;
+    --rel-strong: #BC7B00;
+    --rel-bg: #F8EED7;
+    --rel-line: #DDBE7C;
+
+    --part: #06718F;
+    --part-strong: #037E9F;
+    --part-bg: #E2F0F5;
+    --part-line: #94C7D7;
+
+    --shadow: 0 1px 3px rgba(31, 40, 54, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161D;
+      --surface: #1C232E;
+      --surface-2: #232C39;
+      --ink: #E9EDF2;
+      --muted: #9AA6B5;
+      --faint: #77828F;
+      --line: #303947;
+      --line-strong: #435061;
+      --accent: #86B8A8;
+      --accent-soft: #22352F;
+      --gold: #C9AC6E;
+
+      --full: #E1685C;
+      --full-bg: #3A211D;
+      --full-line: #6E3A33;
+
+      --rel: #CE9A2C;
+      --rel-strong: #BE8A1A;
+      --rel-bg: #34290E;
+      --rel-line: #66511E;
+
+      --part: #4FADC9;
+      --part-strong: #4FADC9;
+      --part-bg: #15303C;
+      --part-line: #2C5567;
+
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12161D;
+    --surface: #1C232E;
+    --surface-2: #232C39;
+    --ink: #E9EDF2;
+    --muted: #9AA6B5;
+    --faint: #77828F;
+    --line: #303947;
+    --line-strong: #435061;
+    --accent: #86B8A8;
+    --accent-soft: #22352F;
+    --gold: #C9AC6E;
+
+    --full: #E1685C;
+    --full-bg: #3A211D;
+    --full-line: #6E3A33;
+
+    --rel: #CE9A2C;
+    --rel-strong: #BE8A1A;
+    --rel-bg: #34290E;
+    --rel-line: #66511E;
+
+    --part: #4FADC9;
+    --part-strong: #4FADC9;
+    --part-bg: #15303C;
+    --part-line: #2C5567;
+
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html { direction: rtl; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+  }
+  .page { max-width: 1120px; margin: 0 auto; padding: 40px 24px 72px; }
+
+  h1, h2, h3 { font-family: "Noto Kufi Arabic", "IBM Plex Sans Arabic", Tahoma, sans-serif; line-height: 1.45; text-wrap: balance; }
+  h1 { font-size: 30px; font-weight: 700; margin: 10px 0 6px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  h3 { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
+  p { margin: 0 0 12px; max-width: 78ch; }
+  section { margin-top: 44px; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--accent); text-transform: uppercase;
+  }
+  .doc-head { border-bottom: 3px double var(--gold); padding-bottom: 20px; }
+  .doc-sub { color: var(--muted); font-size: 14px; max-width: none; }
+  .doc-sub .en { font-size: 13px; }
+
+  .en { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .sec-head .rule { flex: 1; border-top: 1px solid var(--line-strong); }
+  .sec-note { color: var(--muted); font-size: 13.5px; }
+
+  /* ---- stat strip ---- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 24px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+    padding: 12px 14px; box-shadow: var(--shadow);
+  }
+  .stat .num { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .stat .lbl { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+  .stat.hot .num { color: var(--full); }
+  .stat.zero .num { color: var(--accent); }
+
+  /* ---- legend ---- */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 10px; }
+  .tier-card {
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--line); border-inline-start-width: 5px; border-radius: 6px;
+    background: var(--surface); padding: 10px 14px; min-width: 235px; flex: 1;
+  }
+  .tier-card.t-full { border-inline-start-color: var(--full); background: var(--full-bg); }
+  .tier-card.t-rel  { border-inline-start-color: var(--rel-strong); background: var(--rel-bg); }
+  .tier-card.t-part { border-inline-start-color: var(--part-strong); background: var(--part-bg); }
+  .tier-card .glyph { font-size: 20px; line-height: 1; }
+  .t-full .glyph, .t-full b { color: var(--full); }
+  .t-rel .glyph,  .t-rel b  { color: var(--rel); }
+  .t-part .glyph, .t-part b { color: var(--part); }
+  .tier-card .txt { font-size: 13px; line-height: 1.55; }
+  .tier-card .txt b { font-size: 14.5px; }
+  .method {
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 12px 16px; font-size: 13.5px; color: var(--muted);
+  }
+  .method p { max-width: none; margin: 0; }
+
+  /* ---- matrix ---- */
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
+  table.matrix { border-collapse: collapse; width: 100%; min-width: 1020px; }
+  .matrix caption { text-align: start; padding: 14px 18px 4px; font-weight: 600; font-family: "Noto Kufi Arabic", sans-serif; font-size: 15px; }
+  .matrix th, .matrix td { padding: 12px 14px; vertical-align: top; text-align: start; border-top: 1px solid var(--line); }
+  .matrix thead th {
+    border-top: none; background: var(--surface-2);
+    font-size: 12.5px; font-weight: 600; color: var(--muted); white-space: nowrap;
+  }
+  .matrix .theme-cell { min-width: 190px; border-inline-start: 5px solid transparent; }
+  tr.r-full  .theme-cell { border-inline-start-color: var(--full); }
+  tr.r-rel   .theme-cell { border-inline-start-color: var(--rel-strong); }
+  tr.r-part  .theme-cell { border-inline-start-color: var(--part-strong); }
+  .theme-name { font-weight: 700; font-size: 14.5px; line-height: 1.5; }
+  .pillar { display: inline-block; margin-top: 6px; font-size: 11px; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+
+  .match-cell { white-space: nowrap; min-width: 108px; }
+  .pct { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tiername { display: block; font-size: 12px; margin-top: 2px; }
+  tr.r-full  .pct, tr.r-full  .tiername { color: var(--full); }
+  tr.r-rel   .pct, tr.r-rel   .tiername { color: var(--rel); }
+  tr.r-part  .pct, tr.r-part  .tiername { color: var(--part); }
+
+  .matrix td.hit { border-radius: 6px; }
+  tr.r-full  td.hit { background: var(--full-bg); box-shadow: inset 0 0 0 1px var(--full-line); }
+  tr.r-rel   td.hit { background: var(--rel-bg);  box-shadow: inset 0 0 0 1px var(--rel-line); }
+  tr.r-part  td.hit { background: var(--part-bg); box-shadow: inset 0 0 0 1px var(--part-line); }
+  .hit .u { display: inline-block; font-size: 10.5px; font-weight: 700; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; margin-bottom: 4px; background: var(--surface); }
+  .hit .ar { display: block; font-size: 13px; font-weight: 500; line-height: 1.55; }
+  .hit .ti { display: block; direction: ltr; text-align: left; font-size: 11.5px; color: var(--muted); line-height: 1.5; margin-top: 3px; }
+  td.miss { color: var(--faint); text-align: center; font-size: 13px; }
+  .rownote { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 6px; max-width: 24ch; }
+
+  /* ---- pair distribution ---- */
+  .pairs { display: grid; grid-template-columns: max-content 1fr max-content; gap: 8px 14px; align-items: center; max-width: 560px; margin-top: 10px; }
+  .pairs .plabel { font-size: 13.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .pairs .bar { height: 14px; border-radius: 3px; background: var(--accent); min-width: 2px; }
+  .pairs .bar.empty { background: transparent; border-inline-start: 2px solid var(--line-strong); border-radius: 0; }
+  .pairs .pnum { font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pairs .zero-note { color: var(--accent); font-weight: 700; }
+
+  /* ---- unit maps ---- */
+  .grades { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .gcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .gcard h3 { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  .gcard h3 .count { font-size: 11.5px; font-weight: 400; color: var(--muted); }
+  .ulist { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .ulist li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; font-size: 13px; line-height: 1.55; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; background: var(--line-strong); }
+  .dot.d-full { background: var(--full); }
+  .dot.d-rel  { background: var(--rel-strong); }
+  .dot.d-part { background: var(--part-strong); }
+  .ulist .uar { font-weight: 500; display: block; }
+  .ulist .uen { direction: ltr; text-align: left; display: block; font-size: 11.5px; color: var(--muted); }
+  .ulist .tag { font-size: 11px; }
+  .ulist .tag.g-full { color: var(--full); }
+  .ulist .tag.g-rel  { color: var(--rel); }
+  .ulist .tag.g-part { color: var(--part); }
+  .ulist .tag.g-uni  { color: var(--accent); }
+  .gap-note { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line-strong); font-size: 12px; color: var(--muted); }
+
+  /* ---- prose blocks ---- */
+  .prose { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 22px 26px; box-shadow: var(--shadow); }
+  .prose p:last-child { margin-bottom: 0; }
+  .callout {
+    border-inline-start: 4px solid var(--accent); background: var(--accent-soft);
+    border-radius: 6px; padding: 14px 18px; margin: 14px 0;
+  }
+  .callout p { margin: 0; max-width: none; }
+  .warn { border-inline-start-color: var(--full); background: var(--full-bg); }
+
+  /* ---- merge plan ---- */
+  .plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 14px 0; }
+  .plan .step { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; box-shadow: var(--shadow); }
+  .plan .step h3 { color: var(--accent); }
+  .plan ol, .plan ul, .prose ol, .prose ul { margin: 6px 0 0; padding-inline-start: 20px; }
+  .plan li, .prose li { margin-bottom: 6px; }
+  .yr { display: inline-block; font-size: 11px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent); border-radius: 4px; padding: 0 7px; margin-inline-end: 6px; }
+
+  /* ---- footnotes ---- */
+  .notes { font-size: 13px; color: var(--muted); }
+  .notes ol { padding-inline-start: 20px; margin: 8px 0 0; }
+  .notes li { margin-bottom: 8px; max-width: 90ch; }
+  footer { margin-top: 56px; border-top: 1px solid var(--line-strong); padding-top: 14px; font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between; }
+
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  @media (max-width: 640px) {
+    .page { padding: 24px 14px 56px; }
+    h1 { font-size: 24px; }
+  }
+  @media print {
+    body { background: #FFFFFF; }
+    .page { max-width: none; padding: 0; }
+    .scroll { overflow: visible; border: none; box-shadow: none; }
+    .matrix td.hit, .tier-card, .callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    tr, .gcard, .step { break-inside: avoid; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="doc-head">
+    <div class="eyebrow">قسم الدراسات العربية والإسلامية والتربية الأخلاقية · مدرسة دبي الأمريكية</div>
+    <h1>مصفوفة التكرار في منهج التربية الأخلاقية — الصفوف 9 إلى 12</h1>
+    <p class="doc-sub">
+      مسحٌ للملفين اللذين شاركتهما هيذر في 24 أغسطس 2026:
+      خريطة المنهج <span class="en">Moral Education Curriculum Map</span>
+      ومجلد <span class="en">Moral ED PDFs</span>.
+      الوثيقة ترصد الموضوعات التي تعود في أكثر من صف، وتصنّف كل عودة بدرجة تطابق ملوّنة ونسبة مقدّرة،
+      ثم تجيب عن سؤال ضم الصفين العاشر والحادي عشر.
+    </p>
+
+    <div class="stats">
+      <div class="stat"><div class="num">59</div><div class="lbl">درسًا مرسّمًا في خريطة الصفوف 9–12</div></div>
+      <div class="stat"><div class="num">11</div><div class="lbl">موضوعًا متكررًا عبر صفّين أو أكثر</div></div>
+      <div class="stat hot"><div class="num">1 · 5 · 5</div><div class="lbl">كامل · نسبي · جزئي</div></div>
+      <div class="stat"><div class="num">9<span style="font-size:16px; color:var(--muted)"> من 11</span></div><div class="lbl">تكرارًا يكون الصف التاسع طرفًا فيه</div></div>
+      <div class="stat zero"><div class="num">0</div><div class="lbl">تكرار بين العاشر والحادي عشر — أساس مقترح الضم</div></div>
+    </div>
+  </header>
+
+  <section id="legend">
+    <div class="sec-head"><h2>مفتاح الألوان ومنهجية النسبة</h2><div class="rule"></div></div>
+    <div class="legend">
+      <div class="tier-card t-full">
+        <div class="glyph">●</div>
+        <div class="txt"><b>تطابق كامل — 85% فأكثر</b><br>الناتج التعليمي نفسه يُعاد تقريبًا كما هو في صفٍّ آخر.</div>
+      </div>
+      <div class="tier-card t-rel">
+        <div class="glyph">◐</div>
+        <div class="txt"><b>تطابق نسبي — 50 إلى 84%</b><br>المفهوم نفسه يُعاد تدريسه مع اختلاف في الزاوية أو العمق.</div>
+      </div>
+      <div class="tier-card t-part">
+        <div class="glyph">◔</div>
+        <div class="txt"><b>تطابق جزئي — 25 إلى 49%</b><br>تقاطع في جزء من النواتج أو المفردات، والجوهر مختلف.</div>
+      </div>
+    </div>
+    <div class="method">
+      <p>
+        النسبة تقدير تحليلي لمدى تقاطع نواتج التعلم والمفردات بين الخانتين المتقابلتين في خريطة المنهج — قراءة نصية موازنة، لا قياسًا آليًا.
+        ما دون 25% لم يُدرج. كل خلية ملوّنة تحمل رمز الدرجة (● ◐ ◔) واسمها ونسبتها نصًّا، فلا يتوقف فهم الوثيقة على تمييز الألوان،
+        وتصلح للطباعة بالأبيض والأسود.
+      </p>
+    </div>
+  </section>
+
+  <section id="matrix">
+    <div class="sec-head"><h2>المصفوفة: الموضوع الواحد بلونه الواحد أينما ظهر</h2><div class="rule"></div></div>
+    <p class="sec-note">كل صفٍّ من صفوف الجدول موضوع متكرر واحد. لون الصف — ودرجته ونسبته — يلازمانه في كل خلاياه مهما اختلف الصف الدراسي.</p>
+    <div class="scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>الموضوع المتكرر</th>
+            <th>درجة التطابق</th>
+            <th>الصف 9</th>
+            <th>الصف 10</th>
+            <th>الصف 11</th>
+            <th>الصف 12</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr class="r-full" id="m1">
+            <td class="theme-cell">
+              <span class="theme-name">الجشع وأخلاقيات المال</span>
+              <span class="pillar">الفرد والمجتمع IC</span>
+              <div class="rownote">الناتج واحد تقريبًا؛ إضافة الثاني عشر الوحيدة تمييز الطموح من الجشع.</div>
+            </td>
+            <td class="match-cell"><span class="pct">● 90%</span><span class="tiername">تطابق كامل</span></td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">مخاطر الثروة والجشع</span><span class="ti en">The Risks of Wealth and Greed</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">القضايا الأخلاقية في الإدارة المالية</span><span class="ti en">What Are the Ethical Issues Related to Financial Management?</span></td>
+          </tr>
+
+          <tr class="r-rel" id="m2">
+            <td class="theme-cell">
+              <span class="theme-name">الادخار والاستثمار والاقتراض</span>
+              <span class="pillar">الفرد والمجتمع IC</span>
+              <div class="rownote">التاسع يمرّ بها داخل مشروع ريادي؛ الثاني عشر يفردها دروسًا بأنواع القروض والائتمان.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 75%</span><span class="tiername">تطابق نسبي</span></td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">تنمية مهارات ريادة الأعمال (درسان)</span><span class="ti en">Developing Entrepreneurial Skills · How Do I Become an Entrepreneur?</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">الاقتراض والإقراض · الادخار والاستثمار</span><span class="ti en">Forms of Borrowing and Lending · Saving and Investing</span></td>
+          </tr>
+
+          <tr class="r-rel" id="m3">
+            <td class="theme-cell">
+              <span class="theme-name">العولمة: المفهوم والآثار</span>
+              <span class="pillar">الأخلاق والقيم CM</span>
+              <div class="rownote">العاشر يعيد تعريف مفهومٍ ورد مفرداتٍ وقضايا في التاسع، بعدسة اقتصادية.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 70%</span><span class="tiername">تطابق نسبي</span></td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">مدخل الأخلاق العالمية (العولمة في درسين)</span><span class="ti en">Introduction to Global Ethics — vocab: Globalization</span></td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">الاقتصاد والعولمة · منافع العولمة ومضارّها</span><span class="ti en">Economy &amp; Globalization · Benefits and Drawbacks of Globalization</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-rel" id="m4">
+            <td class="theme-cell">
+              <span class="theme-name">المستهلك والاستهلاك الأخلاقي</span>
+              <span class="pillar">الأخلاق والقيم CM</span>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 70%</span><span class="tiername">تطابق نسبي</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">العواقب الأخلاقية لخياراتنا الاستهلاكية</span><span class="ti en">What are the Ethical Consequences of our Consumer Choices?</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">المستهلك الذكي</span><span class="ti en">What Does It Mean to Be a “Smart Consumer”?</span></td>
+          </tr>
+
+          <tr class="r-rel" id="m5">
+            <td class="theme-cell">
+              <span class="theme-name">التفاوت في الدخل والثروة</span>
+              <span class="pillar">الفرد والمجتمع IC</span>
+              <div class="rownote">مفردات التاسع (الدخل، التفاوت، مؤشر التنمية) تصير درسًا قائمًا في العاشر.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 65%</span><span class="tiername">تطابق نسبي</span></td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">مخاطر الثروة والجشع (المفردات)</span><span class="ti en">Vocab: Income · Inequality · Human Development Index</span></td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">التفاوت في الدخل</span><span class="ti en">What is meant by the term “Income Inequality”?</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-rel" id="m6">
+            <td class="theme-cell">
+              <span class="theme-name">المنظمات الدولية وحل القضايا العالمية</span>
+              <span class="pillar">الأخلاق والقيم CM</span>
+              <div class="rownote">التاسع: المنظمات في مواجهة التحديات العالمية؛ الحادي عشر: المنظمات في حفظ السلام.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 65%</span><span class="tiername">تطابق نسبي</span></td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">معالجة التحديات الأخلاقية العالمية دوليًّا</span><span class="ti en">Dealing with Global Ethical Challenges at the International Level</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">دور المنظمات الدولية في حفظ السلام</span><span class="ti en">What Is the Role of International Organizations in Maintaining Peace?</span></td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part" id="m7">
+            <td class="theme-cell">
+              <span class="theme-name">أخلاقيات الاستثمار والنظام المالي</span>
+              <span class="pillar">الفرد والمجتمع IC</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 45%</span><span class="tiername">تطابق جزئي</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">المسؤولية الاجتماعية في الاستثمار</span><span class="ti en">What is Social Responsibility in Investment?</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">النظام المالي ودور الحكومة في تنظيمه</span><span class="ti en">How Does the Financial System Work…?</span></td>
+          </tr>
+
+          <tr class="r-part" id="m8">
+            <td class="theme-cell">
+              <span class="theme-name">العطاء ودعم محدودي الدخل</span>
+              <span class="pillar">الأخلاق والقيم CM</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 45%</span><span class="tiername">تطابق جزئي</span></td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">قيمة المال · الثروة قوةً للخير</span><span class="ti en">Recognizing the Value of Money · How Wealth Can Be a Force for Good</span></td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">التجارة العادلة</span><span class="ti en">What is Fair Trade?</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part" id="m9">
+            <td class="theme-cell">
+              <span class="theme-name">ريادة الأعمال ومهارات الجاهزية للعمل</span>
+              <span class="pillar">الفرد والمجتمع IC</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 40%</span><span class="tiername">تطابق جزئي</span></td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">خطة العمل وإدارة المشروع</span><span class="ti en">Developing Entrepreneurial Skills</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 2</span><span class="ar">مهارات التوظيف · القيادة والإدارة</span><span class="ti en">Essential Employment Skills · Leadership and Management</span></td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part" id="m10">
+            <td class="theme-cell">
+              <span class="theme-name">الحرب والسلم والتحديات الدولية</span>
+              <span class="pillar">الأخلاق والقيم CM</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 35%</span><span class="tiername">تطابق جزئي</span></td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">التحديات الأخلاقية العالمية (درسان)</span><span class="ti en">Global Ethical Challenges — vocab: Treaty · Propaganda · Nuclear</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">الحرب وأسبابها · الحرب العادلة</span><span class="ti en">What Is War…? · Is There Such a Thing as a “Just War”?</span></td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part" id="m11">
+            <td class="theme-cell">
+              <span class="theme-name">القيم والمواطنة والسلوك الأخلاقي</span>
+              <span class="pillar">الدراسات المدنية CIS</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 35%</span><span class="tiername">تطابق جزئي</span></td>
+            <td class="hit"><span class="u">الوحدة 5</span><span class="ar">المواطن الصالح · العمل التطوعي</span><span class="ti en">The Good Citizen · Volunteering</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">الوحدة 1</span><span class="ar">تعزيز السلوك الأخلاقي ومكافحة الفساد</span><span class="ti en">How Can You Promote Ethical Behavior and Combat Corruption…?</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:26px;">توزيع أزواج التكرار بين الصفوف</h3>
+    <div class="pairs">
+      <span class="plabel">9 ↔ 10</span><div><div class="bar" style="width:100%"></div></div><span class="pnum">3</span>
+      <span class="plabel">9 ↔ 11</span><div><div class="bar" style="width:100%"></div></div><span class="pnum">3</span>
+      <span class="plabel">9 ↔ 12</span><div><div class="bar" style="width:100%"></div></div><span class="pnum">3</span>
+      <span class="plabel">10 ↔ 12</span><div><div class="bar" style="width:67%"></div></div><span class="pnum">2</span>
+      <span class="plabel">10 ↔ 11</span><div><div class="bar empty"></div></div><span class="pnum zero-note">0</span>
+      <span class="plabel">11 ↔ 12</span><div><div class="bar empty"></div></div><span class="pnum zero-note">0</span>
+    </div>
+  </section>
+
+  <section id="units">
+    <div class="sec-head"><h2>خريطة الوحدات لكل صف</h2><div class="rule"></div></div>
+    <p class="sec-note">النقطة الملوّنة تعني أن الوحدة طرف في تكرارٍ من المصفوفة أعلاه، بأقوى درجة بلغتها. النقطة الرمادية: وحدة لا نظير لها في المرحلة.</p>
+    <div class="grades">
+
+      <div class="gcard">
+        <h3>الصف 9 <span class="count">25 درسًا · 5 وحدات مرسّمة</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">مدخل الأخلاق العالمية <span class="tag g-rel">◐ نسبي</span></span><span class="uen">Introduction to Global Ethics</span></span></li>
+          <li><span class="dot d-full"></span><span><span class="uar">الوعي المالي <span class="tag g-full">● كامل — بؤرة التكرار</span></span><span class="uen">Financial Awareness</span></span></li>
+          <li><span class="dot"></span><span><span class="uar">ماذا نصون وكيف؟ (التراث) <span class="tag g-uni">فريدة في المرحلة</span></span><span class="uen">What Should We Preserve and How?</span></span></li>
+          <li><span class="dot"></span><span><span class="uar">الحكومة والسلطة والقضاء في الإمارات <span class="tag g-uni">فريدة في المرحلة</span></span><span class="uen">Governments, Authority, and the Judicial System in the UAE</span></span></li>
+          <li><span class="dot d-part"></span><span><span class="uar">كيف أكون مواطنًا فاعلًا <span class="tag g-part">◔ جزئي</span></span><span class="uen">How to Be an Active Citizen</span></span></li>
+        </ul>
+        <div class="gap-note">الوحدة 6: خانة فارغة في الخريطة.</div>
+      </div>
+
+      <div class="gcard">
+        <h3>الصف 10 <span class="count">12 درسًا · وحدتان مرسّمتان</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">الأخلاق والاقتصاد العالمي <span class="tag g-rel">◐ نسبي — دروسها الستة كلها في المصفوفة</span></span><span class="uen">Ethics and the Global Economy</span></span></li>
+          <li><span class="dot"></span><span><span class="uar">الحياة المتوازنة (ومنها الإدمان) <span class="tag g-uni">فريدة في المرحلة</span></span><span class="uen">Balanced Life</span></span></li>
+        </ul>
+        <div class="gap-note">الوحدات 3–6: غير مرسّمة بعد في الخريطة.</div>
+      </div>
+
+      <div class="gcard">
+        <h3>الصف 11 <span class="count">12 درسًا · وحدتان مرسّمتان</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">دراسات السلام والصراع <span class="tag g-rel">◐ نسبي</span></span><span class="uen">Peace and Conflict Studies</span></span></li>
+          <li><span class="dot d-part"></span><span><span class="uar">التأمل والانتقال <span class="tag g-part">◔ جزئي</span></span><span class="uen">Reflection and Transition</span></span></li>
+        </ul>
+        <div class="gap-note">الوحدات 3–6: غير مرسّمة بعد في الخريطة.</div>
+      </div>
+
+      <div class="gcard">
+        <h3>الصف 12 <span class="count">10 دروس · وحدتان مرسّمتان</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">الأخلاق في حياتنا المعاصرة (الفساد) <span class="tag g-rel">◐ نسبي — جوهر الفساد فريد</span></span><span class="uen">Ethics in Our Contemporary Lives</span></span></li>
+          <li><span class="dot d-full"></span><span><span class="uar">إدارة الشؤون المالية في الواقع <span class="tag g-full">● كامل — تعيد مالَ التاسع</span></span><span class="uen">Managing Financial Affairs in the Real World</span></span></li>
+        </ul>
+        <div class="gap-note">الوحدات 3–6: غير مرسّمة بعد في الخريطة.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="reading">
+    <div class="sec-head"><h2>قراءة تحليلية</h2><div class="rule"></div></div>
+    <div class="prose">
+      <p>
+        المحور المالي هو مركز التكرار في المرحلة كلها. من أحد عشر موضوعًا متكررًا، ستة تدور حول المال:
+        قيمته، وتفاوته، وادخاره، واستثماره، وإنفاقه، وأخلاقيات إدارته.
+        وليست المشكلة في عودة المحور — المنهج الحلزوني يعيد موضوعاته عمدًا —
+        المشكلة أن العودة هنا إعادة تقديم لا تعميق.
+        طالب الثاني عشر يُطلب منه تعريف الجشع الذي عرّفه في التاسع، بالناتج نفسه تقريبًا،
+        وفارقُ السنوات الثلاث لا يظهر له أثر في صياغة النواتج.
+      </p>
+      <p>
+        والتاسع هو الصف الأم: طرف في تسعة من أحد عشر تكرارًا.
+        لذلك سببان يجب الفصل بينهما. الأول حقيقي: وحدتاه الأوليان (الأخلاق العالمية، الوعي المالي) تؤسسان مفاهيم تعود لاحقًا في 10 و11 و12.
+        والثاني إحصائي: التاسع وحده مرسّم بخمس وحدات كاملة، بينما اكتفت خريطة الصفوف الثلاثة الأخرى بوحدتين لكل صف،
+        فكل مقارنة تمر به اضطرارًا. اكتمال الخريطة سيرفع عدد التكرارات على الأرجح، وقد يعدّل النسب؛ لكنه لن يغيّر الصورة العامة.
+      </p>
+      <div class="callout warn">
+        <p>
+          <b>ملاحظة توثيقية داخل التاسع نفسه:</b>
+          ناتجان مكرران حرفيًّا بين دروس متجاورة —
+          «يناقش طرق تجنب التعقيدات المالية…» في درسَي قيمة المال ومخاطر الثروة،
+          و«يتخذ قرارات واعية في مشروع يتعلق بالإنتاج والادخار والاستثمار والاقتراض» في درسَي الريادة.
+          أثرُ نسخٍ ولصقٍ في الترسيم أكثر منه قرارًا تربويًّا، ويستحق التصويب في أول مراجعة للخريطة.
+        </p>
+      </div>
+      <p>
+        في المقابل، أربع وحدات لا نظير لها في المرحلة وتستحق الحماية من أي إعادة هيكلة:
+        التراث والحكومة والقضاء في التاسع، والحياة المتوازنة والإدمان في العاشر — وهي من أهم ما يقدَّم للمراهق في هذه السن —
+        وجوهر وحدة الفساد في الثاني عشر.
+      </p>
+    </div>
+  </section>
+
+  <section id="merge">
+    <div class="sec-head"><h2>ضم الصفين العاشر والحادي عشر: ممكن، والخريطة تسانده</h2><div class="rule"></div></div>
+    <div class="prose">
+      <p>
+        الحقيقة التي يقوم عليها المقترح ظاهرة في المصفوفة: <b>لا يوجد تكرار واحد بين العاشر والحادي عشر.</b>
+        كل تقاطعات العاشر مع التاسع والثاني عشر، وكل تقاطعات الحادي عشر مع التاسع وحده.
+        فالصفّان يحملان أربع وحدات متباينة تمامًا: الاقتصاد العالمي والحياة المتوازنة في العاشر،
+        والسلام والصراع والتأمل والانتقال في الحادي عشر.
+        شعبة مدمجة لن تصطدم بمحتوى مكرر إطلاقًا — وهذه أنسب حالة ممكنة للدمج.
+      </p>
+      <div class="callout">
+        <p><b>التوصية: نموذج التناوب السنوي (سنة أ / سنة ب)</b> — شعبة واحدة تجمع طلاب الصفين، بمعلم واحد وحصة واحدة في الجدول الرئيسي.</p>
+      </div>
+    </div>
+
+    <div class="plan">
+      <div class="step">
+        <h3>آلية التناوب</h3>
+        <ul>
+          <li><span class="yr">سنة أ</span> تدرس الشعبة المدمجة منهج العاشر كاملًا: الأخلاق والاقتصاد العالمي، ثم الحياة المتوازنة.</li>
+          <li><span class="yr">سنة ب</span> تدرس منهج الحادي عشر: السلام والصراع، ثم التأمل والانتقال.</li>
+          <li>كل طالب يغطي المنهجين خلال سنتَي 10–11؛ يتبدل الترتيب فقط، ولا شيء في الوحدات الأربع يشترط تسلسلًا عمريًّا صارمًا.</li>
+          <li>وحدة «التأمل والانتقال» تُثبَّت في الفصل الثاني من سنتها أيًّا كان موقع السنة في الدورة، لتقترب ما أمكن من سن التخرج.</li>
+        </ul>
+      </div>
+      <div class="step">
+        <h3>التقييم والتوثيق</h3>
+        <ul>
+          <li>مهمة أدائية واحدة بمستويي عمق: نواتج وصفية وتعريفية للعاشر، وتحليلية وتقويمية للحادي عشر.</li>
+          <li>سجل تغطية نواتج لكل فوج، يُحدَّث فصليًّا — هذا ما سيسأل عنه المفتش بعد ثمانية عشر شهرًا: أين الدليل أن فوج كذا غطى نواتج الصفين؟ الجواب جدول واحد.</li>
+          <li>يُعرض التصور على الإدارة قبل التنفيذ، لأن التربية الأخلاقية مادة وزارية إلزامية؛ الالتزام يوثَّق بالنواتج المغطاة لا بترتيب السنوات.</li>
+        </ul>
+      </div>
+      <div class="step">
+        <h3>مكاسب تنسيق تصاحب الضم</h3>
+        <ol>
+          <li>حذف إعادة تعريف العولمة من وحدة العاشر (تؤسَّس في التاسع) والاكتفاء بمراجعة قصيرة ثم الدخول في العدسة الاقتصادية — توفير درس كامل.</li>
+          <li>تحويل درس «التفاوت في الدخل» إلى تطبيق ببيانات جديدة بدل إعادة شرح مفردات التاسع.</li>
+          <li>تنسيق مسبق مع معلم الثاني عشر: وحدة المال هناك تستدعي مشروع التاسع وتبني عليه، ولا تعيد تدريس الجشع والادخار من نقطة الصفر.</li>
+        </ol>
+      </div>
+      <div class="step">
+        <h3>البديل إن رُفض التناوب</h3>
+        <p style="font-size:13.5px; max-width:none;">
+          الدمج الموضوعي: وحدات هجينة بمخرجات مركبة من الصفين
+          (مثل «الاقتصاد والقرار الأخلاقي» و«السلام ومهارات الانتقال»).
+          أثقل إعدادًا، وأصعب توثيقًا أمام أي جهة مراجعة، ولا أنصح به إلا اضطرارًا.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="notes">
+    <div class="sec-head"><h2>حدود هذا المسح</h2><div class="rule"></div></div>
+    <div class="notes">
+      <ol>
+        <li>خريطة الصفوف 10 و11 و12 مكتملة للوحدتين الأوليين فقط؛ خانات الوحدات 4.0 إلى 6.0 قائمة وفارغة، والوحدة الثالثة لم تُدرج بعد. النسب أعلاه محسوبة على المرسّم فقط، وتُراجع عند اكتمال الخريطة.</li>
+        <li>مجلد <span class="en">Moral ED PDFs</span> يضم مجلدات فرعية للصفوف 1 إلى 12، والفرعية للصفوف 10 و11 و12 فارغة حاليًا. مجلد الصف 9 وحده يحوي كتاب الفصل الثاني <span class="en">(Moraled-G9B2.pdf، نسخة 2026)</span> ونسختين قديمتين (2017) من كتاب الطالب ودليل المعلم بصيغة <span class="en">EPUB</span>.</li>
+        <li>تصنيف الركائز (الأخلاق والقيم CM، الفرد والمجتمع IC، الدراسات المدنية CIS، الدراسات الثقافية CUS) مأخوذ من تبويب <span class="en">Moral Ed. Pillars</span> في الخريطة نفسها.</li>
+        <li>التكرار الرأسي مع الحلقات الدنيا (مثل عودة التراث الإماراتي في الخامس ثم التاسع) خارج نطاق هذه الوثيقة، وهو في عمومه تكرار حلزوني مقصود.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <span>المصدران: <span class="en">Moral Education Curriculum Map</span> · <span class="en">Moral ED PDFs</span> — مشاركة هيذر، 24 أغسطس 2026</span>
+    <span>أُعدّت للاستخدام الداخلي في القسم · 24 أغسطس 2026</span>
+  </footer>
+
+</div>
