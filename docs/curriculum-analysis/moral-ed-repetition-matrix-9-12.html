@@ -94,7 +94,8 @@
   }
 
   * { box-sizing: border-box; }
-  html { direction: rtl; }
+  #ar { direction: rtl; }
+  #en { direction: ltr; }
   body {
     margin: 0;
     background: var(--bg);
@@ -247,12 +248,26 @@
   a { color: var(--accent); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+  .lang-toggle {
+    position: fixed; top: 14px; left: 14px; z-index: 50;
+    display: flex; gap: 4px; padding: 4px;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 999px;
+    box-shadow: var(--shadow);
+  }
+  .lang-toggle button {
+    font-family: "IBM Plex Sans Arabic", Tahoma, sans-serif; font-size: 13px;
+    border: none; background: transparent; color: var(--muted);
+    padding: 4px 14px; border-radius: 999px; cursor: pointer;
+  }
+  .lang-toggle button.active { background: var(--accent); color: var(--surface); }
+
   @media (max-width: 640px) {
     .page { padding: 24px 14px 56px; }
     h1 { font-size: 24px; }
   }
   @media print {
     body { background: #FFFFFF; }
+    .lang-toggle { display: none; }
     .page { max-width: none; padding: 0; }
     .scroll { overflow: visible; border: none; box-shadow: none; }
     .matrix td.hit, .tier-card, .callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
@@ -260,6 +275,12 @@
   }
 </style>
 
+<div class="lang-toggle" role="group" aria-label="Language / اللغة">
+  <button type="button" data-lang="en">English</button>
+  <button type="button" data-lang="ar">العربية</button>
+</div>
+
+<div id="ar" lang="ar">
 <div class="page">
 
   <header class="doc-head">
@@ -743,7 +764,530 @@
 
   <footer>
     <span>المصدران: <span class="en">Moral Education Curriculum Map</span> · <span class="en">Moral ED PDFs</span> — مشاركة هيذر، 24 أغسطس 2026</span>
-    <span>أُعدّت للاستخدام الداخلي في القسم · النسخة 4 — 24 أغسطس 2026: أُضيف تعميم التجربة على مواد القسم بقواعد العزل</span>
+    <span>أُعدّت للاستخدام الداخلي في القسم · النسخة 5 — 24 أغسطس 2026: أُضيفت الطبعة الإنجليزية الكاملة إلى جانب العربية</span>
   </footer>
 
 </div>
+</div>
+
+<div id="en" lang="en" hidden>
+<div class="page">
+
+  <header class="doc-head">
+    <div class="eyebrow">Arabic, Islamic &amp; Moral Studies Department · American School of Dubai</div>
+    <h1>Repetition Matrix — Moral Education, Grades 9–12</h1>
+    <p class="doc-sub">
+      A scan of the two files Heather shared on 24 August 2026: the Moral Education Curriculum Map
+      and the Moral ED PDFs folder. The document records the topics that return in more than one grade
+      and classifies each return with a color-coded match tier and an estimated percentage — then turns
+      the map from a record into a teacher-collaboration plan across grades, and into the Sharih
+      peer-teaching program where the overlap allows.
+    </p>
+
+    <div class="stats">
+      <div class="stat"><div class="num">59</div><div class="lbl">lessons mapped across Grades 9–12</div></div>
+      <div class="stat"><div class="num">11</div><div class="lbl">topics repeated across two or more grades</div></div>
+      <div class="stat hot"><div class="num">1 · 5 · 5</div><div class="lbl">full · substantial · partial</div></div>
+      <div class="stat"><div class="num">9<span style="font-size:16px; color:var(--muted)"> of 11</span></div><div class="lbl">repetitions involve Grade 9</div></div>
+      <div class="stat zero"><div class="num">4</div><div class="lbl">vertical collaboration teams derived directly from the matrix pairs</div></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><h2>Color key and how the percentages were made</h2><div class="rule"></div></div>
+    <div class="legend">
+      <div class="tier-card t-full">
+        <div class="glyph">●</div>
+        <div class="txt"><b>Full match — 85% and above</b><br>The learning outcome returns in another grade nearly as written.</div>
+      </div>
+      <div class="tier-card t-rel">
+        <div class="glyph">◐</div>
+        <div class="txt"><b>Substantial match — 50 to 84%</b><br>The same concept is retaught with a different angle or depth.</div>
+      </div>
+      <div class="tier-card t-part">
+        <div class="glyph">◔</div>
+        <div class="txt"><b>Partial match — 25 to 49%</b><br>Outcomes or vocabulary intersect in part; the core differs.</div>
+      </div>
+    </div>
+    <div class="method">
+      <p>
+        Each percentage is an analytical estimate of how far learning outcomes and vocabulary intersect
+        between the two cells — a textual comparison, not an automated measure. Anything below 25% is not listed.
+        Every colored cell carries the tier's glyph (● ◐ ◔), its name, and its percentage in text, so the document
+        does not depend on color perception and prints in black and white.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>The matrix: one topic, one color, wherever it appears</h2><div class="rule"></div></div>
+    <p class="sec-note">Each table row is one repeated topic. Its color, tier, and percentage stay with it in every cell, whatever the grade.</p>
+    <div class="scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Repeated topic</th>
+            <th>Match</th>
+            <th>Grade 9</th>
+            <th>Grade 10</th>
+            <th>Grade 11</th>
+            <th>Grade 12</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr class="r-full">
+            <td class="theme-cell">
+              <span class="theme-name">Greed and the ethics of money</span>
+              <span class="pillar">Individual &amp; Community IC</span>
+              <div class="rownote">Nearly the same outcome; Grade 12's only addition is separating ambition from greed.</div>
+            </td>
+            <td class="match-cell"><span class="pct">● 90%</span><span class="tiername">Full match</span></td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">The Risks of Wealth and Greed</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">What Are the Ethical Issues Related to Financial Management?</span></td>
+          </tr>
+
+          <tr class="r-rel">
+            <td class="theme-cell">
+              <span class="theme-name">Saving, investing, and borrowing</span>
+              <span class="pillar">Individual &amp; Community IC</span>
+              <div class="rownote">Grade 9 passes through them inside an entrepreneurial project; Grade 12 gives them standalone lessons with loan and credit types.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 75%</span><span class="tiername">Substantial</span></td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">Developing Entrepreneurial Skills · How Do I Become an Entrepreneur?</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">Forms of Borrowing and Lending · Saving and Investing</span></td>
+          </tr>
+
+          <tr class="r-rel">
+            <td class="theme-cell">
+              <span class="theme-name">Globalization: concept and effects</span>
+              <span class="pillar">Character &amp; Morality CM</span>
+              <div class="rownote">Grade 10 re-defines a concept Grade 9 already carried in vocabulary and issues, through an economic lens.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 70%</span><span class="tiername">Substantial</span></td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">Introduction to Global Ethics — vocab: Globalization (two lessons)</span></td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">Economy &amp; Globalization · Benefits and Drawbacks of Globalization</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-rel">
+            <td class="theme-cell">
+              <span class="theme-name">The consumer and ethical consumption</span>
+              <span class="pillar">Character &amp; Morality CM</span>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 70%</span><span class="tiername">Substantial</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">What are the Ethical Consequences of our Consumer Choices?</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">What Does It Mean to Be a "Smart Consumer"?</span></td>
+          </tr>
+
+          <tr class="r-rel">
+            <td class="theme-cell">
+              <span class="theme-name">Income and wealth inequality</span>
+              <span class="pillar">Individual &amp; Community IC</span>
+              <div class="rownote">Grade 9 vocabulary (income, inequality, HDI) becomes a standalone Grade 10 lesson.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 65%</span><span class="tiername">Substantial</span></td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">The Risks of Wealth and Greed — vocab: Income · Inequality · Human Development Index</span></td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">What is meant by the term "Income Inequality"?</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-rel">
+            <td class="theme-cell">
+              <span class="theme-name">International organizations and global problem-solving</span>
+              <span class="pillar">Character &amp; Morality CM</span>
+              <div class="rownote">Grade 9: organizations confronting global challenges; Grade 11: organizations keeping the peace.</div>
+            </td>
+            <td class="match-cell"><span class="pct">◐ 65%</span><span class="tiername">Substantial</span></td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">Dealing with Global Ethical Challenges at the International Level</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">What Is the Role of International Organizations in Maintaining Peace?</span></td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part">
+            <td class="theme-cell">
+              <span class="theme-name">Investment ethics and the financial system</span>
+              <span class="pillar">Individual &amp; Community IC</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 45%</span><span class="tiername">Partial</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">What is Social Responsibility in Investment?</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">How Does the Financial System Work…?</span></td>
+          </tr>
+
+          <tr class="r-part">
+            <td class="theme-cell">
+              <span class="theme-name">Giving and support for low-income communities</span>
+              <span class="pillar">Character &amp; Morality CM</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 45%</span><span class="tiername">Partial</span></td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">Recognizing the Value of Money · How Wealth Can Be a Force for Good</span></td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">What is Fair Trade?</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part">
+            <td class="theme-cell">
+              <span class="theme-name">Entrepreneurship and employability skills</span>
+              <span class="pillar">Individual &amp; Community IC</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 40%</span><span class="tiername">Partial</span></td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">Developing Entrepreneurial Skills (business plan, project management)</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 2</span><span class="ar">Essential Employment Skills · Leadership and Management</span></td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part">
+            <td class="theme-cell">
+              <span class="theme-name">War, peace, and international challenges</span>
+              <span class="pillar">Character &amp; Morality CM</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 35%</span><span class="tiername">Partial</span></td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">Global Ethical Challenges (two lessons) — vocab: Treaty · Propaganda · Nuclear</span></td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">What Is War…? · Is There Such a Thing as a "Just War"?</span></td>
+            <td class="miss">—</td>
+          </tr>
+
+          <tr class="r-part">
+            <td class="theme-cell">
+              <span class="theme-name">Values, citizenship, and ethical conduct</span>
+              <span class="pillar">Civic Studies CIS</span>
+            </td>
+            <td class="match-cell"><span class="pct">◔ 35%</span><span class="tiername">Partial</span></td>
+            <td class="hit"><span class="u">Unit 5</span><span class="ar">The Good Citizen · Volunteering</span></td>
+            <td class="miss">—</td>
+            <td class="miss">—</td>
+            <td class="hit"><span class="u">Unit 1</span><span class="ar">How Can You Promote Ethical Behavior and Combat Corruption…?</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:26px;">How the repetition pairs distribute across grades</h3>
+    <div class="pairs">
+      <span class="plabel">9 ↔ 10</span><div><div class="bar" style="width:100%"></div></div><span class="pnum">3</span>
+      <span class="plabel">9 ↔ 11</span><div><div class="bar" style="width:100%"></div></div><span class="pnum">3</span>
+      <span class="plabel">9 ↔ 12</span><div><div class="bar" style="width:100%"></div></div><span class="pnum">3</span>
+      <span class="plabel">10 ↔ 12</span><div><div class="bar" style="width:67%"></div></div><span class="pnum">2</span>
+      <span class="plabel">10 ↔ 11</span><div><div class="bar empty"></div></div><span class="pnum zero-note">0</span>
+      <span class="plabel">11 ↔ 12</span><div><div class="bar empty"></div></div><span class="pnum zero-note">0</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Unit map by grade</h2><div class="rule"></div></div>
+    <p class="sec-note">A colored dot means the unit takes part in a matrix repetition, at the strongest tier it reaches. A gray dot: a unit with no counterpart in the phase.</p>
+    <div class="grades">
+
+      <div class="gcard">
+        <h3>Grade 9 <span class="count">25 lessons · 5 units mapped</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">Introduction to Global Ethics <span class="tag g-rel">◐ substantial</span></span></span></li>
+          <li><span class="dot d-full"></span><span><span class="uar">Financial Awareness <span class="tag g-full">● full — the repetition hotspot</span></span></span></li>
+          <li><span class="dot"></span><span><span class="uar">What Should We Preserve and How? (heritage) <span class="tag g-uni">unique in the phase</span></span></span></li>
+          <li><span class="dot"></span><span><span class="uar">Governments, Authority, and the Judicial System in the UAE <span class="tag g-uni">unique in the phase</span></span></span></li>
+          <li><span class="dot d-part"></span><span><span class="uar">How to Be an Active Citizen <span class="tag g-part">◔ partial</span></span></span></li>
+        </ul>
+        <div class="gap-note">Unit 6: an empty slot in the map.</div>
+      </div>
+
+      <div class="gcard">
+        <h3>Grade 10 <span class="count">12 lessons · 2 units mapped</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">Ethics and the Global Economy <span class="tag g-rel">◐ substantial — all six lessons sit in the matrix</span></span></span></li>
+          <li><span class="dot"></span><span><span class="uar">Balanced Life (including addiction) <span class="tag g-uni">unique in the phase</span></span></span></li>
+        </ul>
+        <div class="gap-note">Units 3–6: not yet mapped.</div>
+      </div>
+
+      <div class="gcard">
+        <h3>Grade 11 <span class="count">12 lessons · 2 units mapped</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">Peace and Conflict Studies <span class="tag g-rel">◐ substantial</span></span></span></li>
+          <li><span class="dot d-part"></span><span><span class="uar">Reflection and Transition <span class="tag g-part">◔ partial</span></span></span></li>
+        </ul>
+        <div class="gap-note">Units 3–6: not yet mapped.</div>
+      </div>
+
+      <div class="gcard">
+        <h3>Grade 12 <span class="count">10 lessons · 2 units mapped</span></h3>
+        <ul class="ulist">
+          <li><span class="dot d-rel"></span><span><span class="uar">Ethics in Our Contemporary Lives (corruption) <span class="tag g-rel">◐ substantial — the corruption core is unique</span></span></span></li>
+          <li><span class="dot d-full"></span><span><span class="uar">Managing Financial Affairs in the Real World <span class="tag g-full">● full — retreads Grade 9's money</span></span></span></li>
+        </ul>
+        <div class="gap-note">Units 3–6: not yet mapped.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Reading the matrix</h2><div class="rule"></div></div>
+    <div class="prose">
+      <p>
+        The financial strand is the center of repetition across the whole phase. Of eleven repeated topics,
+        six concern money: its value, its inequality, saving it, investing it, spending it, and the ethics of managing it.
+        The problem is not that the strand returns — a spiral curriculum repeats its topics on purpose.
+        The problem is that what returns here is re-introduction, not deepening.
+        A Grade 12 student is asked to define the greed he defined in Grade 9, with nearly the same outcome,
+        and the three years between the two lessons leave no trace on how the outcome is written.
+      </p>
+      <p>
+        Grade 9 is the mother grade: party to nine of the eleven repetitions. Two reasons need separating.
+        One is real: its first two units (Global Ethics, Financial Awareness) establish concepts that return
+        in Grades 10, 11, and 12. The other is statistical: Grade 9 alone is mapped across five full units,
+        while the other three grades are mapped for two units each, so every comparison necessarily passes through it.
+        Completing the map will probably raise the count and may adjust the percentages; it will not change the picture.
+      </p>
+      <div class="callout warn">
+        <p>
+          <b>A documentation note inside Grade 9 itself:</b>
+          two learning outcomes repeat verbatim across adjacent lessons —
+          "Discusses ways to avoid financial complications…" in both the value-of-money and risks-of-wealth lessons,
+          and "Makes informed decisions… related to production, savings, investment, and borrowing" in both entrepreneurship lessons.
+          Copy-paste residue in the mapping more than a pedagogical decision; worth correcting in the map's first revision.
+        </p>
+      </div>
+      <p>
+        Four units, on the other hand, have no counterpart in the phase and deserve protection from any restructuring:
+        heritage and UAE government and law in Grade 9, Balanced Life and addiction in Grade 10 —
+        among the most important content offered to adolescents at this age — and the corruption core in Grade 12.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>From repetition map to a teacher-collaboration plan</h2><div class="rule"></div></div>
+    <div class="prose">
+      <p>
+        Combining Grades 10 and 11 was studied and then ruled out once it proved unworkable.
+        The map loses none of its value; it shows its more useful reading:
+        <b>every colored row in the matrix is a ready-made meeting between two specific teachers</b>,
+        and the percentage beside it is not a verdict on the curriculum — it is the order of the meeting agenda.
+        The higher the percentage, the earlier the item.
+        The repetition recorded as a defect in the pages above becomes, here, the working material itself.
+      </p>
+      <div class="callout">
+        <p><b>The same colors, read for collaboration:</b>
+        red ● top collaboration priority — the outcome nearly repeats, so the depth must diverge.
+        Amber ◐ divide the angles — one concept, two lenses, split explicitly between the grades.
+        Blue ◔ mutual enrichment — an overlap used for recall and connection, no more.</p>
+      </div>
+    </div>
+
+    <div class="plan">
+      <div class="step">
+        <h3>The four teams — derived from the matrix pairs as they stand</h3>
+        <ul>
+          <li><span class="yr">9 ↔ 12</span><b>Money and Ethics team:</b> Greed ● 90% · Saving and Investing ◐ 75% · Values and Citizenship ◔ 35% — the heaviest team and the first to convene.</li>
+          <li><span class="yr">9 ↔ 10</span><b>Globalization and Economy team:</b> Globalization ◐ 70% · Income Inequality ◐ 65% · Giving and Fair Trade ◔ 45%.</li>
+          <li><span class="yr">9 ↔ 11</span><b>Peace and International Organizations team:</b> International Organizations ◐ 65% · Entrepreneurship and Employability ◔ 40% · War and Peace ◔ 35%.</li>
+          <li><span class="yr">10 ↔ 12</span><b>Consumer and Investment team:</b> The Consumer ◐ 70% · Investment Ethics and the Financial System ◔ 45%.</li>
+        </ul>
+        <p style="font-size:12.5px; color:var(--muted); max-width:none; margin-top:10px;">
+          Where one teacher covers both grades of a pair, the team still stands; its work becomes documented self-alignment.
+        </p>
+      </div>
+
+      <div class="step">
+        <h3>The "Establish / Build" protocol — two decisions per topic</h3>
+        <ol>
+          <li><b>Where is the concept established?</b> The establishing grade owns the definition, the vocabulary, and the first example — uncontested.</li>
+          <li><b>What does the higher grade add?</b> A new application, new data, or a higher level of thinking (analysis and evaluation instead of definition and description) — with re-definition barred beyond a brief recall.</li>
+        </ol>
+        <p style="font-size:13px; max-width:none; margin-top:8px;">
+          Both decisions go on one <b>handover page</b> per topic: what was taught, which vocabulary is settled,
+          a sample of student work, and what the next grade is entitled to assume. Eleven pages at most, starting with three.
+        </p>
+      </div>
+
+      <div class="step">
+        <h3>Light mechanics that add no burden</h3>
+        <ol>
+          <li>One vertical alignment meeting at the start of each semester (45 minutes); the agenda is the matrix rows in order of their percentages.</li>
+          <li>A standing item in the monthly department meeting: one matrix row per meeting.</li>
+          <li>One cross-grade task per team per year — ready example: Grade 9 entrepreneurship projects judged by Grade 12 students against the financial-management unit's criteria. Its complete form is the Sharih Program in the next section.</li>
+          <li>One reciprocal classroom visit per semester, on a matrix lesson specifically — not a random one.</li>
+        </ol>
+      </div>
+
+      <div class="step">
+        <h3>Documentation and the impact indicator</h3>
+        <ul>
+          <li>One collaboration log for the department: date, matrix row, the two decisions, evidence — vertical alignment documented with names and dates, ready for the self-evaluation file and any inspection.</li>
+          <li>The annual indicator: full matches turn into graded building — effective overlap in the higher grade falls while the ministry outcomes stay intact. The percentages in this document are the baseline.</li>
+          <li>Decisions ready for the first meeting: establish globalization in Grade 9 and open Grade 10 with a short review; turn "Income Inequality" into an application with fresh data; build the Grade 12 money unit on the Grade 9 project instead of repeating it.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:2px;">
+      <p><b>Suggested starting point:</b> the Greed row — the clearest case and the fastest win.
+      One meeting between the Grade 9 and Grade 12 teachers settles the two decisions and produces
+      the first handover page, a model for the remaining teams.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>The Sharih ("Explainer") Program — students teaching students where the curriculum repeats</h2><div class="rule"></div></div>
+    <div class="prose">
+      <p>
+        A colored row in the matrix means a student in the higher grade meets the topic twice.
+        Let that student teach it to the lower grade, with the teacher supervising and assessing.
+        This is the highest-value use of the repetition yet: what was recorded as a defect becomes
+        a platform for student leadership and authentic assessment — and because the deepest understanding
+        belongs to the one who explains, the program serves the explainer before the audience.
+        The explaining itself is the "build" level the protocol demands.
+      </p>
+      <p>
+        The source of opportunities is the matrix itself: red and amber rows (50% match and above) are
+        the program's syllabus; blue rows join later if the program matures. The direction always runs
+        from the higher grade to the lower:
+      </p>
+      <ul>
+        <li><span class="yr">12 → 9</span><b>Greed and the ethics of money ● 90%</b> and <b>Saving and Investing ◐ 75%</b> — the Grade 12 explainer teaches the introduction to Grade 9 while sitting in the deepening unit himself; the strongest launch.</li>
+        <li><span class="yr">10 → 9</span><b>Globalization ◐ 70%</b> and <b>Income Inequality ◐ 65%</b>.</li>
+        <li><span class="yr">11 → 9</span><b>International Organizations ◐ 65%</b>.</li>
+        <li><span class="yr">12 → 10</span><b>The Smart Consumer ◐ 70%</b>.</li>
+      </ul>
+    </div>
+
+    <div class="plan">
+      <div class="step">
+        <h3>Condition one: a segment, not a lesson</h3>
+        <p style="font-size:13.5px; max-width:none;">
+          The student teaches a 15–20 minute segment inside a lesson the teacher opens, closes,
+          and corrects on the spot; the segment plan is approved a week ahead.
+          Supervision here is work, not presence: approving the plan, correcting any error in the moment,
+          feedback after the lesson — the subject is ministry-mandated, and responsibility for content
+          accuracy stays with the teacher. It does not transfer to the student.
+        </p>
+      </div>
+      <div class="step">
+        <h3>Condition two: a published rubric, a bounded weight</h3>
+        <p style="font-size:13.5px; max-width:none;">
+          The explainer is assessed against the outcomes of their own grade — content depth, planning,
+          delivery, checking audience understanding — with a rubric published before the assignment,
+          a defined weight inside the approved assessment policy, and administration sign-off,
+          since it enters report-card grades. Students unsuited to standing before a full class get
+          an equivalent alternative under the same rubric: a recorded explanation or a small group.
+          The grade measures the quality of the explanation, not stage courage.
+        </p>
+      </div>
+      <div class="step">
+        <h3>Condition three: scheduling and language</h3>
+        <p style="font-size:13.5px; max-width:none;">
+          Delivery happens in <span class="en">WIN</span> or wherever the two grades' periods align in
+          the master schedule, matching the language of the receiving section.
+          Documentation joins the same collaboration log: two artifacts per delivery
+          (the segment plan, the marked rubric) — which is precisely the evidence of student leadership
+          and authentic assessment for any self-evaluation file or inspection.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p><b>The start:</b> the same starting point — the Greed row.
+      The first explainer from Grade 12, in its second unit, before one Grade 9 section:
+      a trial to build on before scaling.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Scaling the experiment to the department's other subjects — without touching what stands</h2><div class="rule"></div></div>
+    <div class="prose">
+      <p>
+        Yes — it scales to the whole department as an experiment, behind one non-negotiable condition:
+        <b>what transfers to another subject is not the Sharih Program alone but the whole chain</b> —
+        a curriculum map, then a repetition matrix with its percentages, then teams, then explaining slots.
+        The matrix is each subject's entry ticket. A peer-teaching program without a matrix has students
+        teaching where overlap seems to be rather than where it was measured, and that is the one door
+        through which quality risk enters.
+      </p>
+      <p>
+        Protecting the department's existing system and files is design, not hope — three isolation rules:
+      </p>
+      <ol>
+        <li><b>An added layer, not an edit:</b> the experiment lives in its own space (a matrix per subject, a collaboration log, handover pages), reads from the subject's existing files and writes to none; no syllabus, map, or approved resource is touched.</li>
+        <li><b>A semester review gate:</b> one semester, one matrix row per subject, then a review that decides — scale, adjust, or stop entirely. Since nothing was modified, stopping leaves nothing to repair.</li>
+        <li><b>Grade isolation during the pilot:</b> explainer assessment stays formative or sits inside an existing performance task; entry into report-card grades comes after the review and with administration approval, not before.</li>
+      </ol>
+    </div>
+
+    <div class="plan">
+      <div class="step">
+        <h3>Subject fit — a plain assessment</h3>
+        <ul>
+          <li><b>Arabic:</b> the best fit after Moral Education — language skills repeat by nature (grammar, rhetoric, texts), and peer explanation is itself language practice. Track matching (Arabic/English) applies.</li>
+          <li><b>Islamic Education:</b> the most spiral in structure and the most content-sensitive — explainer topics are restricted to settled rulings, sīrah, and values, away from points of scholarly difference, with the tightest supervision. Its best case is recitation: a proficient explainer coaches a weaker one within the teacher's hearing, and errors are corrected in the moment.</li>
+          <li><b>Social Studies:</b> similar in structure to Moral Education; the recurrence of UAE topics across grades is a natural candidate.</li>
+          <li><b>Moral Education:</b> the reference model — this document.</li>
+        </ul>
+      </div>
+      <div class="step">
+        <h3>What risk remains after isolation — and its treatment</h3>
+        <ul>
+          <li><b>Teacher buy-in:</b> four subjects mean more teachers and uneven enthusiasm — entry is voluntary in the first semester; joining after seeing the Moral Education model is easier than joining by decree.</li>
+          <li><b>Explainer variance:</b> the first cohort is selected against published criteria (mastery of the topic, the student's own wish), not by appointment.</li>
+          <li><b>Follow-up dispersion across four subjects:</b> the largest risk is not to the department's system but to the experiment itself — one experiment lead per subject, and a single unified log passing to the department chair, not four parallel follow-ups.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Limits of this scan</h2><div class="rule"></div></div>
+    <div class="notes">
+      <ol>
+        <li>The maps for Grades 10, 11, and 12 are complete for the first two units only; slots for units 4.0–6.0 exist and are empty, and unit 3 is not yet entered. The percentages above are computed on what is mapped and will be revisited when the map is complete.</li>
+        <li>The Moral ED PDFs folder holds subfolders for Grades 1–12; those for Grades 10, 11, and 12 are currently empty. Only the Grade 9 folder holds the second-semester book (Moraled-G9B2.pdf, 2026) and two 2017 EPUB copies of the student book and teacher guide.</li>
+        <li>The pillar classification (Character &amp; Morality CM, Individual &amp; Community IC, Civic Studies CIS, Cultural Studies CUS) comes from the Moral Ed. Pillars tab of the map itself.</li>
+        <li>Vertical repetition with the lower cycles (e.g., Emirati heritage returning in Grade 5 and again in Grade 9) is outside this document's scope and is, in the main, deliberate spiral repetition.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <span>Sources: Moral Education Curriculum Map · Moral ED PDFs — shared by Heather, 24 August 2026</span>
+    <span>Prepared for internal department use · v5 — 24 August 2026: full English edition added alongside the Arabic</span>
+  </footer>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var KEY = 'me-matrix-lang';
+  var lang = 'en';
+  try { lang = localStorage.getItem(KEY) || 'en'; } catch (e) {}
+  if (lang !== 'ar' && lang !== 'en') lang = 'en';
+  var buttons = document.querySelectorAll('.lang-toggle button');
+  function apply(l) {
+    lang = l;
+    document.getElementById('ar').hidden = (l !== 'ar');
+    document.getElementById('en').hidden = (l !== 'en');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.toggle('active', buttons[i].getAttribute('data-lang') === l);
+    }
+    try { localStorage.setItem(KEY, l); } catch (e) {}
+  }
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', function () { apply(this.getAttribute('data-lang')); });
+  }
+  apply(lang);
+})();
+</script>
